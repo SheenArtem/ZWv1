@@ -91,6 +91,8 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
     let liuYueIndex: number | undefined;
     let liuNianSiHuaSummary: string | undefined;
     let liuYueSiHuaSummary: string | undefined;
+    let lnSiHuaMap: Record<string, any> = {};
+    let lySiHuaMap: Record<string, any> = {};
 
     if (predictionDate) {
         const pSolar = Solar.fromDate(predictionDate);
@@ -105,7 +107,7 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         // Liu Nian Si Hua
         const pAvgYearGan = pLunar.getGanZhiYear().substring(0, 1);
         const pYearGanIndex = getStemIndex(pAvgYearGan);
-        const lnSiHuaMap = calculateSiHua(pYearGanIndex);
+        lnSiHuaMap = calculateSiHua(pYearGanIndex);
         liuNianSiHuaSummary = formatSiHua(lnSiHuaMap);
 
         // Liu Yue
@@ -116,7 +118,7 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         // Liu Yue Si Hua
         const pMonthGan = pLunar.getGanZhiMonth().substring(0, 1);
         const pMonthGanIndex = getStemIndex(pMonthGan);
-        const lySiHuaMap = calculateSiHua(pMonthGanIndex);
+        lySiHuaMap = calculateSiHua(pMonthGanIndex);
         liuYueSiHuaSummary = formatSiHua(lySiHuaMap);
     }
 
@@ -138,7 +140,9 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
                     name: starName,
                     type: 'major',
                     brightness: getBrightness(starName, b),
-                    mutagen: siHuaMap[starName]
+                    mutagen: siHuaMap[starName],
+                    liuNianMutagen: lnSiHuaMap[starName],
+                    liuYueMutagen: lySiHuaMap[starName]
                 });
             }
         }
@@ -151,7 +155,9 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
                 cellMinorStars.push({
                     name: starName,
                     type: isBad ? 'bad' : 'minor',
-                    mutagen: siHuaMap[starName]
+                    mutagen: siHuaMap[starName],
+                    liuNianMutagen: lnSiHuaMap[starName],
+                    liuYueMutagen: lySiHuaMap[starName]
                 });
             }
         }
@@ -160,7 +166,9 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
                 cellMinorStars.push({
                     name: starName,
                     type: 'aux',
-                    mutagen: siHuaMap[starName]
+                    mutagen: siHuaMap[starName],
+                    liuNianMutagen: lnSiHuaMap[starName],
+                    liuYueMutagen: lySiHuaMap[starName]
                 });
             }
         }

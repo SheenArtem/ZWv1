@@ -5,7 +5,9 @@ export interface Star {
     name: string;
     type: 'major' | 'minor' | 'bad' | 'good' | 'aux';
     brightness?: string; // 廟, 旺...
-    mutagen?: StarMutagen; // Si Hua
+    mutagen?: StarMutagen; // Si Hua (Birth)
+    liuNianMutagen?: StarMutagen; // Si Hua (Liu Nian)
+    liuYueMutagen?: StarMutagen; // Si Hua (Liu Yue)
 }
 
 export interface TwelveGods {

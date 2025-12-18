@@ -11,21 +11,44 @@ interface PalaceCardProps {
 
 export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, isLiuYue }) => {
     // Badges text-sm (14px)
-    const getMutagenBadge = (m?: string) => {
-        if (!m) return null;
+    const renderMutagens = (star: Star) => {
+        const badges = [];
         const charMap: Record<string, string> = { 'Lu': '祿', 'Quan': '權', 'Ke': '科', 'Ji': '忌' };
-        const colorMap: Record<string, string> = {
-            'Lu': 'bg-emerald-600 border-emerald-400 text-white',
-            'Quan': 'bg-red-600 border-red-400 text-white',
-            'Ke': 'bg-blue-600 border-blue-400 text-white',
-            'Ji': 'bg-rose-700 border-rose-500 text-white'
-        };
 
-        return (
-            <span className={clsx("ml-1 text-[14px] px-1 rounded border font-bold inline-block leading-tight", colorMap[m])}>
-                {charMap[m]}
-            </span>
-        );
+        // Birth
+        if (star.mutagen) {
+            const colorMap: Record<string, string> = {
+                'Lu': 'bg-emerald-600 border-emerald-400 text-white',
+                'Quan': 'bg-red-600 border-red-400 text-white',
+                'Ke': 'bg-blue-600 border-blue-400 text-white',
+                'Ji': 'bg-rose-700 border-rose-500 text-white'
+            };
+            badges.push(
+                <span key="birth" className={clsx("ml-1 text-[14px] px-1 rounded border font-bold inline-block leading-tight", colorMap[star.mutagen])}>
+                    {charMap[star.mutagen]}
+                </span>
+            );
+        }
+
+        // Liu Nian
+        if (star.liuNianMutagen) {
+            badges.push(
+                <span key="liunian" className={clsx("ml-1 text-[12px] px-0.5 rounded border border-amber-500 bg-amber-900/80 text-amber-100 font-bold inline-block leading-tight")}>
+                    流{charMap[star.liuNianMutagen]}
+                </span>
+            );
+        }
+
+        // Liu Yue
+        if (star.liuYueMutagen) {
+            badges.push(
+                <span key="liuyue" className={clsx("ml-1 text-[12px] px-0.5 rounded border border-emerald-500 bg-emerald-900/80 text-emerald-100 font-bold inline-block leading-tight")}>
+                    月{charMap[star.liuYueMutagen]}
+                </span>
+            );
+        }
+
+        return badges;
     };
 
     const MajorStarItem = ({ star }: { star: Star }) => (
@@ -41,7 +64,7 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
                     {star.brightness}
                 </span>
             )}
-            {getMutagenBadge(star.mutagen)}
+            {renderMutagens(star)}
         </div>
     );
 
@@ -53,7 +76,7 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
             )}>
                 {star.name}
             </span>
-            {getMutagenBadge(star.mutagen)}
+            {renderMutagens(star)}
         </div>
     );
 
