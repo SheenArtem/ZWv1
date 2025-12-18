@@ -7,7 +7,8 @@ import { getBureau } from './calculators/FiveElements';
 import { getZiWeiIndex, calculateMajorStars } from './calculators/StarCalculator';
 import { calculateLiuNian, calculateLiuYue } from './calculators/TimeCalculator';
 import { HEAVENLY_STEMS, EARTHLY_BRANCHES, ZWDS_PALACE_NAMES } from './constants';
-import { Solar } from 'lunar-javascript';
+import LunarJS from 'lunar-javascript';
+const { Solar } = LunarJS;
 
 export const generateChart = (input: BirthDetails, predictionDate?: Date): ChartData => {
     // 1. Convert to Lunar

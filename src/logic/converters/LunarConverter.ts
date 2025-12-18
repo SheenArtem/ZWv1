@@ -1,4 +1,5 @@
-import { Solar } from 'lunar-javascript';
+import LunarJS from 'lunar-javascript';
+const { Solar } = LunarJS;
 import { BirthDetails, LunarDetails } from '../models/BirthDetails';
 
 export const convertToLunar = (details: BirthDetails): LunarDetails => {
