@@ -104,13 +104,9 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         if (pBranchIndex < 0) pBranchIndex += 12;
         liuNianIndex = calculateLiuNian(pBranchIndex);
 
-        // Liu Nian Si Hua
-        const pAvgYearGan = pLunar.getYearInGanZhi().substring(0, 1);
-        let pYearGanIndex = getStemIndex(pAvgYearGan);
-        if (pYearGanIndex === -1) {
-            pYearGanIndex = (pYear - 4) % 10;
-            if (pYearGanIndex < 0) pYearGanIndex += 10;
-        }
+        // Liu Nian Si Hua - Use pure math calculation
+        let pYearGanIndex = (pYear - 4) % 10;
+        if (pYearGanIndex < 0) pYearGanIndex += 10;
         lnSiHuaMap = calculateSiHua(pYearGanIndex);
         liuNianSiHuaSummary = formatSiHua(lnSiHuaMap);
 
@@ -119,19 +115,11 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         const pMonth = Math.abs(pLunar.getMonth());
         liuYueIndex = calculateLiuYue(liuNianIndex, birthMonth, lunarHourIndex, pMonth);
 
-        // Liu Yue Si Hua
-        const pMonthGan = pLunar.getMonthInGanZhi().substring(0, 1);
-        let pMonthGanIndex = getStemIndex(pMonthGan);
-        if (pMonthGanIndex === -1) {
-            // Fallback: Calculate Month Gan based on Year Gan
-            // Formula: (YearGan % 5 + 1) * 2 = 1st Month Stem
-            const startMonthStem = ((pYearGanIndex % 5) + 1) * 2;
-            // pMonth is 1-based usually? pLunar.getMonth() can be negative for leap, Math.abs is used above.
-            // But strict lunar month index?
-            // Let's rely on (month + 1) offset? NO, pMonth is the lunar month number (1-12).
-            // Stem of month M = (Start + M - 1) % 10.
-            pMonthGanIndex = (startMonthStem + (pMonth - 1)) % 10;
-        }
+        // Liu Yue Si Hua - Use pure math calculation (Wu Hu Dun formula)
+        // Month Gan formula: First month starts at (Year Gan % 5 + 1) * 2
+        // Then add (month - 1) to get current month's Gan
+        const startMonthStem = ((pYearGanIndex % 5) + 1) * 2;
+        let pMonthGanIndex = (startMonthStem + (pMonth - 1)) % 10;
         lySiHuaMap = calculateSiHua(pMonthGanIndex);
         liuYueSiHuaSummary = formatSiHua(lySiHuaMap);
     }
