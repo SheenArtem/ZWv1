@@ -39,8 +39,8 @@ function App() {
                 )}
             </div>
 
-            <footer className="w-full text-center p-4 text-slate-600 text-[12px] mt-8 border-t border-slate-800">
-                v2.5 專業版 (Font Size 12px+ & Si Hua Center) | ZWDS App
+            <footer className="w-full text-center p-4 text-slate-600 text-[14px] mt-8 border-t border-slate-800">
+                v2.6 專業版 (Min Font 14px & Prominent Si Hua) | ZWDS App
             </footer>
         </div>
     );
