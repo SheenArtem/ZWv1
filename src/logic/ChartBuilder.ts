@@ -28,14 +28,19 @@ const getShenZhu = (yearBranchIndex: number): string => {
 };
 
 // Helper: Format Si Hua Map to String
-const formatSiHua = (map: Record<string, string>): string => {
+const formatSiHua = (map: Record<string, string>): string | undefined => {
     console.log('[Format Si Hua] Input map:', map);
-    const result = Object.entries(map).map(([star, type]) => {
+    const entries = Object.entries(map);
+    if (entries.length === 0) {
+        console.log('[Format Si Hua] Empty map, returning undefined');
+        return undefined;
+    }
+    const result = entries.map(([star, type]) => {
         const typeChar = { 'Lu': '祿', 'Quan': '權', 'Ke': '科', 'Ji': '忌' }[type];
         return `${typeChar}: ${star}`;
     }).join('  ');
     console.log('[Format Si Hua] Output string:', result);
-    return result;
+    return result || undefined;  // Return undefined if empty string
 };
 
 const GAN_CHARS = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];

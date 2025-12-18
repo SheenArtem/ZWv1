@@ -68,7 +68,7 @@ export const ChartGrid: FC<ChartGridProps> = ({ chart, displayMode = 'all' }) =>
                     )}
                 </div>
 
-                <p className="mt-2 text-xs text-slate-600">標準排盤系統 (v3.1)</p>
+                <p className="mt-2 text-xs text-slate-600">標準排盤系統 (v3.2)</p>
             </div>
         </div>
     );
