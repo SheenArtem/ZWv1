@@ -29,24 +29,27 @@ const getShenZhu = (yearBranchIndex: number): string => {
 
 // Helper: Format Si Hua Map to String
 const formatSiHua = (map: Record<string, string>): string | undefined => {
-    console.log('[Format Si Hua] Input map:', map);
     const entries = Object.entries(map);
     if (entries.length === 0) {
-        console.log('[Format Si Hua] Empty map, returning undefined');
         return undefined;
     }
     const result = entries.map(([star, type]) => {
         const typeChar = { 'Lu': '祿', 'Quan': '權', 'Ke': '科', 'Ji': '忌' }[type];
         return `${typeChar}: ${star}`;
     }).join('  ');
-    console.log('[Format Si Hua] Output string:', result);
-    return result || undefined;  // Return undefined if empty string
+    return result || undefined;
 };
 
 const GAN_CHARS = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
 
 const getStemIndex = (char: string): number => {
     return GAN_CHARS.indexOf(char);
+};
+
+const ZODIAC_MAP: Record<string, string> = {
+    '子': '鼠', '丑': '牛', '寅': '虎', '卯': '兔',
+    '辰': '龍', '巳': '蛇', '午': '馬', '未': '羊',
+    '申': '猴', '酉': '雞', '戌': '狗', '亥': '豬'
 };
 
 export const generateChart = (input: BirthDetails, predictionDate?: Date): ChartData => {
@@ -102,9 +105,19 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
     let lnSiHuaMap: Record<string, any> = {};
     let lySiHuaMap: Record<string, any> = {};
 
+    // Prediction Display Info
+    let predictionDisplayDate: string | undefined;
+    let predictionLunarDate: string | undefined;
+    let predictionGanZhi: string | undefined;
+
     if (predictionDate) {
         const pSolar = Solar.fromDate(predictionDate);
         const pLunar = pSolar.getLunar();
+
+        // Populate Prediction Display Info
+        predictionDisplayDate = `${pSolar.getYear()}年${pSolar.getMonth()}月${pSolar.getDay()}日`;
+        predictionLunarDate = `${pLunar.getYearInGanZhi()}年 ${pLunar.getMonthInChinese()}月 ${pLunar.getDayInChinese()}日`;
+        predictionGanZhi = `${pLunar.getYearInGanZhi()}年 ${pLunar.getMonthInGanZhi()}月 ${pLunar.getDayInGanZhi()}日`;
 
         // Liu Nian
         const pYear = pLunar.getYear();
@@ -112,28 +125,32 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         if (pBranchIndex < 0) pBranchIndex += 12;
         liuNianIndex = calculateLiuNian(pBranchIndex);
 
-        // Liu Nian Si Hua - Use pure math calculation
+        // Liu Nian Si Hua
         let pYearGanIndex = (pYear - 4) % 10;
         if (pYearGanIndex < 0) pYearGanIndex += 10;
 
-        lnSiHuaMap = calculateSiHua(pYearGanIndex);
-
-        liuNianSiHuaSummary = formatSiHua(lnSiHuaMap);
+        try {
+            lnSiHuaMap = calculateSiHua(pYearGanIndex);
+            liuNianSiHuaSummary = formatSiHua(lnSiHuaMap);
+        } catch (e) {
+            console.error(e);
+        }
 
         // Liu Yue
         const birthMonth = lunar.lunarMonth;
         const pMonth = Math.abs(pLunar.getMonth());
         liuYueIndex = calculateLiuYue(liuNianIndex, birthMonth, lunarHourIndex, pMonth);
 
-        // Liu Yue Si Hua - Use pure math calculation (Wu Hu Dun formula)
-        // Month Gan formula: First month starts at (Year Gan % 5 + 1) * 2
-        // Then add (month - 1) to get current month's Gan
+        // Liu Yue Si Hua
         const startMonthStem = ((pYearGanIndex % 5) + 1) * 2;
         let pMonthGanIndex = (startMonthStem + (pMonth - 1)) % 10;
 
-        lySiHuaMap = calculateSiHua(pMonthGanIndex);
-
-        liuYueSiHuaSummary = formatSiHua(lySiHuaMap);
+        try {
+            lySiHuaMap = calculateSiHua(pMonthGanIndex);
+            liuYueSiHuaSummary = formatSiHua(lySiHuaMap);
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     // 8. Assemble
@@ -205,6 +222,9 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         });
     }
 
+    const zodiacChar = yearZhiChar;
+    const zodiacAnimal = ZODIAC_MAP[zodiacChar] || '';
+
     return {
         bureau,
         palaces,
@@ -214,6 +234,17 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         shenZhu,
         siHuaSummary,
         liuNianSiHuaSummary,
-        liuYueSiHuaSummary
+        liuYueSiHuaSummary,
+
+        // Display Info
+        birthDate: `${input.year}年${input.month}月${input.day}日 ${input.hour}時`,
+        lunarDate: `${lunar.lunarYear}年${lunar.lunarMonth}月${lunar.lunarDay}日`,
+        baZi: lunar.eightChar,
+        zodiac: `${zodiacChar}${zodiacAnimal}`, // e.g. 辰龍
+
+        // Prediction Info
+        predictionDate: predictionDisplayDate,
+        predictionLunarDate: predictionLunarDate,
+        predictionGanZhi: predictionGanZhi
     };
 };

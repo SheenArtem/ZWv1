@@ -10,9 +10,14 @@ function App() {
     const [activeTab, setActiveTab] = useState<'birth' | 'year' | 'month'>('birth');
 
     const handleGenerate = (details: BirthDetails, predictionDate?: Date) => {
-        // Generate the chart using logic engine
-        const data = generateChart(details, predictionDate);
-        setChartData(data);
+        try {
+            // Generate the chart using logic engine
+            const data = generateChart(details, predictionDate);
+            setChartData(data);
+        } catch (error) {
+            alert(`❌ ERROR in generateChart:\n${error}`);
+            console.error('Error generating chart:', error);
+        }
     };
 
     return (
@@ -64,7 +69,7 @@ function App() {
             </div>
 
             <footer className="w-full text-center p-4 text-slate-600 text-[14px] mt-8 border-t border-slate-800">
-                v3.2 專業版 (Prediction Si Hua & Dou Jun) | ZWDS App
+                v3.3 專業版 (Prediction Si Hua & Info) | ZWDS App
             </footer>
         </div>
     );

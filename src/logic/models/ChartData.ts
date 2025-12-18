@@ -39,4 +39,15 @@ export interface ChartData {
     siHuaSummary?: string;      // Birth Year Si Hua
     liuNianSiHuaSummary?: string; // Prediction Year Si Hua
     liuYueSiHuaSummary?: string;  // Prediction Month Si Hua
+
+    // Display Info
+    birthDate?: string;
+    lunarDate?: string;
+    baZi?: string;
+    zodiac?: string;
+
+    // Prediction Display Info
+    predictionDate?: string;
+    predictionLunarDate?: string;
+    predictionGanZhi?: string;
 }

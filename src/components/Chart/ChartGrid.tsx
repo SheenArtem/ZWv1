@@ -35,14 +35,41 @@ export const ChartGrid: FC<ChartGridProps> = ({ chart, displayMode = 'all' }) =>
         <div className="col-span-2 row-span-2 bg-slate-900 flex flex-col items-center justify-center border border-slate-700 p-2 overflow-y-auto">
             <h3 className="text-3xl font-bold text-amber-500 mb-2">紫微斗數</h3>
             <div className="text-slate-300 text-sm space-y-2 text-center font-medium w-full">
-                <div className="flex gap-4 justify-center text-base">
-                    <p>局數: {bureauMap[chart.bureau] || chart.bureau}</p>
-                    <p>命主: {chart.mingZhu || 'Unknown'}</p>
-                    <p>身主: {chart.shenZhu || 'Unknown'}</p>
+
+                {/* Birth Info Block */}
+                <div className="bg-slate-800/50 p-2 rounded mb-2 border border-slate-700">
+                    <div className="flex justify-center gap-4 text-amber-100 mb-1">
+                        <span>{chart.birthDate}</span>
+                    </div>
+                    <div className="flex justify-center gap-4 text-slate-400 text-xs">
+                        <span>農曆: {chart.lunarDate}</span>
+                        <span>八字: {chart.baZi}</span>
+                        <span>生肖: {chart.zodiac}</span>
+                    </div>
+                    <div className="flex gap-4 justify-center text-sm mt-1 border-t border-slate-700/50 pt-1">
+                        <p>局數: {bureauMap[chart.bureau] || chart.bureau}</p>
+                        <p>命主: {chart.mingZhu || 'Unknown'}</p>
+                        <p>身主: {chart.shenZhu || 'Unknown'}</p>
+                    </div>
                 </div>
 
+                {/* Prediction Info Block - Only show if prediction is active */}
+                {chart.predictionDate && (
+                    <div className="bg-indigo-900/30 p-2 rounded mb-2 border border-indigo-500/30">
+                        <p className="text-indigo-300 font-bold mb-1">運勢預測</p>
+                        <div className="text-indigo-100 text-sm">
+                            {chart.predictionDate}
+                        </div>
+                        <div className="flex justify-center gap-2 text-indigo-400 text-xs mt-1">
+                            <span>農曆: {chart.predictionLunarDate}</span>
+                            <span>干支: {chart.predictionGanZhi}</span>
+                        </div>
+                    </div>
+                )}
+
                 {/* Si Hua Summaries */}
-                <div className="flex flex-col gap-2 mt-2 w-full px-2">
+                <div className="flex flex-col gap-2 mt-1 w-full px-2">
+
                     {/* Birth Si Hua - Show if mode is 'all' or 'birth' */}
                     {chart.siHuaSummary && (displayMode === 'all' || displayMode === 'birth') && (
                         <div className="p-2 bg-slate-800 rounded border border-slate-600 shadow-sm">
