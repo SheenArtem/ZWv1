@@ -19,13 +19,25 @@ const SI_HUA_TABLE: string[][] = [
 ];
 
 export const calculateSiHua = (yearGanIndex: number): Record<string, StarMutagen> => {
-    const row = SI_HUA_TABLE[yearGanIndex];
-    if (!row) return {};
+    // Validate input
+    if (yearGanIndex < 0 || yearGanIndex > 9 || !Number.isInteger(yearGanIndex)) {
+        console.error('[Si Hua Calculator] Invalid yearGanIndex:', yearGanIndex);
+        return {};
+    }
 
-    return {
-        [row[0]]: 'Lu',   // 祿
-        [row[1]]: 'Quan', // 權
-        [row[2]]: 'Ke',   // 科
-        [row[3]]: 'Ji'    // 忌
+    const row = SI_HUA_TABLE[yearGanIndex];
+    if (!row || row.length !== 4) {
+        console.error('[Si Hua Calculator] Invalid row for index:', yearGanIndex, row);
+        return {};
+    }
+
+    const result = {
+        [row[0]]: 'Lu' as StarMutagen,   // 祿
+        [row[1]]: 'Quan' as StarMutagen, // 權
+        [row[2]]: 'Ke' as StarMutagen,   // 科
+        [row[3]]: 'Ji' as StarMutagen    // 忌
     };
+
+    console.log('[Si Hua Calculator] yearGanIndex:', yearGanIndex, '→', result);
+    return result;
 };
