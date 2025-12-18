@@ -107,8 +107,15 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         // Liu Nian Si Hua - Use pure math calculation
         let pYearGanIndex = (pYear - 4) % 10;
         if (pYearGanIndex < 0) pYearGanIndex += 10;
+
+        console.log('[DEBUG] Prediction Year:', pYear);
+        console.log('[DEBUG] Year Gan Index:', pYearGanIndex);
+
         lnSiHuaMap = calculateSiHua(pYearGanIndex);
+        console.log('[DEBUG] Liu Nian Si Hua Map:', lnSiHuaMap);
+
         liuNianSiHuaSummary = formatSiHua(lnSiHuaMap);
+        console.log('[DEBUG] Liu Nian Si Hua Summary:', liuNianSiHuaSummary);
 
         // Liu Yue
         const birthMonth = lunar.lunarMonth;
@@ -120,8 +127,15 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         // Then add (month - 1) to get current month's Gan
         const startMonthStem = ((pYearGanIndex % 5) + 1) * 2;
         let pMonthGanIndex = (startMonthStem + (pMonth - 1)) % 10;
+
+        console.log('[DEBUG] Month:', pMonth);
+        console.log('[DEBUG] Month Gan Index:', pMonthGanIndex);
+
         lySiHuaMap = calculateSiHua(pMonthGanIndex);
+        console.log('[DEBUG] Liu Yue Si Hua Map:', lySiHuaMap);
+
         liuYueSiHuaSummary = formatSiHua(lySiHuaMap);
+        console.log('[DEBUG] Liu Yue Si Hua Summary:', liuYueSiHuaSummary);
     }
 
     // 8. Assemble
