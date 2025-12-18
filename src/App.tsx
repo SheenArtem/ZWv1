@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { InputForm } from './components/InputForm';
 import { ChartGrid } from './components/Chart/ChartGrid';
 import { BirthDetails } from './logic/models/BirthDetails';

@@ -1,5 +1,4 @@
-import { LunarDetails } from '../models/BirthDetails';
-import { BRANCH_INDEX } from '../constants';
+// LunarDetails unused
 
 // Star Placement Logic
 // We need to place 14 Major Stars.

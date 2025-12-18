@@ -1,4 +1,4 @@
-import { HEAVENLY_STEMS } from '../constants';
+// HEAVENLY_STEMS unused
 
 // Returns the Stem index (0-9) for the Yin palace (index 2 in Branch array)
 // based on the Year Stem index (0-9).

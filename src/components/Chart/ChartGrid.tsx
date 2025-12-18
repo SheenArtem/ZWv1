@@ -1,4 +1,4 @@
-import React from 'react';
+import { FC } from 'react';
 import { ChartData } from '../../logic/models/ChartData';
 import { PalaceCard } from './PalaceCard';
 
@@ -6,7 +6,7 @@ interface ChartGridProps {
     chart: ChartData;
 }
 
-export const ChartGrid: React.FC<ChartGridProps> = ({ chart }) => {
+export const ChartGrid: FC<ChartGridProps> = ({ chart }) => {
     // The Grid Layout usually follows:
     // Si   Wu   Wei   Shen
     // Chen            You
