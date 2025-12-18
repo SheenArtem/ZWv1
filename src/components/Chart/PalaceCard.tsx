@@ -33,8 +33,8 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
         // Liu Nian
         if (star.liuNianMutagen) {
             badges.push(
-                <span key="liunian" className={clsx("ml-1 text-[12px] px-0.5 rounded border border-amber-500 bg-amber-900/80 text-amber-100 font-bold inline-block leading-tight")}>
-                    流{charMap[star.liuNianMutagen]}
+                <span key="liunian" className={clsx("ml-1 text-[12px] px-1 rounded border border-amber-500 bg-amber-900/80 text-amber-100 font-bold inline-block leading-tight transform scale-90")}>
+                    流年 {charMap[star.liuNianMutagen]}
                 </span>
             );
         }
@@ -42,8 +42,8 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
         // Liu Yue
         if (star.liuYueMutagen) {
             badges.push(
-                <span key="liuyue" className={clsx("ml-1 text-[12px] px-0.5 rounded border border-emerald-500 bg-emerald-900/80 text-emerald-100 font-bold inline-block leading-tight")}>
-                    月{charMap[star.liuYueMutagen]}
+                <span key="liuyue" className={clsx("ml-1 text-[12px] px-1 rounded border border-emerald-500 bg-emerald-900/80 text-emerald-100 font-bold inline-block leading-tight transform scale-90")}>
+                    流月 {charMap[star.liuYueMutagen]}
                 </span>
             );
         }
