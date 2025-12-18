@@ -8,30 +8,40 @@ import { generateChart } from './logic/ChartBuilder';
 function App() {
     const [chartData, setChartData] = useState<ChartData | null>(null);
 
-    const handleGenerate = (details: BirthDetails) => {
+    const handleGenerate = (details: BirthDetails, predictionDate?: Date) => {
         // Generate the chart using logic engine
-        const data = generateChart(details);
+        const data = generateChart(details, predictionDate);
         setChartData(data);
     };
 
     return (
-        <div className="min-h-screen bg-slate-900 text-white py-10 px-4">
-            <div className="max-w-6xl mx-auto">
+        <div className="min-h-screen bg-slate-900 text-white py-10 px-4 flex flex-col">
+            <div className="max-w-6xl mx-auto flex-grow w-full">
                 <header className="text-center mb-10">
                     <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
-                        Zi Wei Dou Shu
+                        紫微斗數 (Zi Wei Dou Shu)
                     </h1>
-                    <p className="text-slate-400 mt-2">Professional Astrological Chart Generation</p>
+                    <p className="text-slate-400 mt-2">專業排盤系統 (Professional Astrological Chart Generation)</p>
                 </header>
 
-                <InputForm onSubmit={handleGenerate} />
-
-                {chartData && (
-                    <div className="animate-fade-in mt-10">
+                {!chartData ? (
+                    <InputForm onSubmit={handleGenerate} />
+                ) : (
+                    <div className="animate-fade-in mt-10 flex flex-col items-center">
+                        <button
+                            onClick={() => setChartData(null)}
+                            className="mb-6 px-6 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-full transition-colors text-sm"
+                        >
+                            ← 返回輸入 (Back)
+                        </button>
                         <ChartGrid chart={chartData} />
                     </div>
                 )}
             </div>
+
+            <footer className="w-full text-center p-4 text-slate-600 text-xs mt-8 border-t border-slate-800">
+                v1.1 繁體中文版 | ZWDS App
+            </footer>
         </div>
     );
 }
