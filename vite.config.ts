@@ -11,4 +11,7 @@ export default defineConfig({
       transformMixedEsModules: true,
     },
   },
+  optimizeDeps: {
+    include: ['lunar-javascript'],
+  },
 })
