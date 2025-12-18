@@ -1,37 +1,26 @@
-// Simplified brightness map (Miaowang)
-// Map: Star -> Branch -> Brightness
-// B(0-11)
-// M=Miao, W=Wang, D=De, L=Li, P=Ping, B=Bu, X=Xian
+// Brightness Map using proper Chinese Keys
 
 export const BRIGHTNESS_TABLE: Record<string, string[]> = {
     // Zi (0) ... Hai (11)
-    'Zi Wei': ['Ping', 'Miao', 'Miao', 'Wang', 'Xian', 'Wang', 'Miao', 'Ping', 'Wang', 'Ping', 'Ping', 'Wang'],
-    'Tian Ji': ['Miao', 'Xian', 'Wang', 'Wang', 'Miao', 'Ping', 'Miao', 'Xian', 'De', 'Wang', 'Ping', 'Ping'],
-    'Tai Yang': ['Xian', 'Xian', 'Wang', 'Miao', 'Miao', 'Wang', 'Wang', 'De', 'De', 'Ping', 'Xian', 'Xian'],
-    'Wu Qu': ['Wang', 'Miao', 'Ping', 'Wang', 'Miao', 'Ping', 'Wang', 'Miao', 'Ping', 'Wang', 'Miao', 'Ping'],
-    'Tian Tong': ['Wang', 'Xian', 'Ping', 'Miao', 'Ping', 'Xian', 'Wang', 'Xian', 'Wang', 'Ping', 'Ping', 'Miao'],
-    'Lian Zhen': ['Ping', 'Li', 'Miao', 'Ping', 'Li', 'Xian', 'Ping', 'Li', 'Miao', 'Ping', 'Li', 'Xian'],
+    '紫微': ['平', '廟', '廟', '旺', '陷', '旺', '廟', '平', '旺', '平', '平', '旺'],
+    '天機': ['廟', '陷', '旺', '旺', '廟', '平', '廟', '陷', '得', '旺', '平', '平'],
+    '太陽': ['陷', '陷', '旺', '廟', '廟', '旺', '旺', '得', '得', '平', '陷', '陷'],
+    '武曲': ['旺', '廟', '平', '旺', '廟', '平', '旺', '廟', '平', '旺', '廟', '平'],
+    '天同': ['旺', '陷', '平', '廟', '平', '陷', '旺', '陷', '旺', '平', '平', '廟'],
+    '廉貞': ['平', '利', '廟', '平', '利', '陷', '平', '利', '廟', '平', '利', '陷'],
 
-    'Tian Fu': ['Miao', 'Miao', 'Miao', 'Ping', 'Miao', 'De', 'Wang', 'Miao', 'De', 'Ping', 'Miao', 'Wang'],
-    'Tai Yin': ['Miao', 'Miao', 'Xian', 'Xian', 'Xian', 'Xian', 'Xian', 'Ping', 'Li', 'Wang', 'Wang', 'Miao'],
-    'Tan Lang': ['Wang', 'Miao', 'Ping', 'Ping', 'Wang', 'Miao', 'Ping', 'Ping', 'Wang', 'Miao', 'Ping', 'Xian'],
-    'Ju Men': ['Wang', 'Xian', 'Miao', 'Miao', 'Ping', 'Ping', 'Wang', 'Xian', 'Miao', 'Miao', 'Ping', 'Wang'],
-    'Tian Xiang': ['Wang', 'Miao', 'Miao', 'Xian', 'Miao', 'Ping', 'Wang', 'De', 'Miao', 'Xian', 'Miao', 'Ping'],
-    'Tian Liang': ['Wang', 'Wang', 'Miao', 'Miao', 'Wang', 'Xian', 'Miao', 'Wang', 'Xian', 'Ping', 'Miao', 'Xian'],
-    'Qi Sha': ['Wang', 'Wang', 'Miao', 'Wang', 'Wang', 'Ping', 'Wang', 'Wang', 'Miao', 'Wang', 'Wang', 'Ping'],
-    'Po Jun': ['Miao', 'Wang', 'Ping', 'Xian', 'Wang', 'Miao', 'Miao', 'Wang', 'Ping', 'Xian', 'Wang', 'Miao'],
+    '天府': ['廟', '廟', '廟', '平', '廟', '得', '旺', '廟', '得', '平', '廟', '旺'],
+    '太陰': ['廟', '廟', '陷', '陷', '陷', '陷', '陷', '平', '利', '旺', '旺', '廟'],
+    '貪狼': ['旺', '廟', '平', '平', '旺', '廟', '平', '平', '旺', '廟', '平', '陷'],
+    '巨門': ['旺', '陷', '廟', '廟', '平', '平', '旺', '陷', '廟', '廟', '平', '旺'],
+    '天相': ['旺', '廟', '廟', '陷', '廟', '平', '旺', '得', '廟', '陷', '廟', '平'],
+    '天梁': ['旺', '旺', '廟', '廟', '旺', '陷', '廟', '旺', '陷', '平', '廟', '陷'],
+    '七殺': ['旺', '旺', '廟', '旺', '旺', '平', '旺', '旺', '廟', '旺', '旺', '平'],
+    '破軍': ['廟', '旺', '平', '陷', '旺', '廟', '廟', '旺', '平', '陷', '旺', '廟'],
 };
 
 export const getBrightness = (starName: string, branchIndex: number): string => {
     const row = BRIGHTNESS_TABLE[starName];
     if (!row) return '';
-    const val = row[branchIndex];
-
-    // Map simplified codes to Chinese
-    const map: Record<string, string> = {
-        'Miao': '廟', 'Wang': '旺', 'De': '得', 'Li': '利',
-        'Ping': '平', 'Bu': '不', 'Xian': '陷'
-    };
-
-    return map[val] || '';
+    return row[branchIndex];
 };
