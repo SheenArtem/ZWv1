@@ -31,18 +31,28 @@ export const ChartGrid: FC<ChartGridProps> = ({ chart }) => {
 
     const CenterInfo = () => (
         <div className="col-span-2 row-span-2 bg-slate-900 flex flex-col items-center justify-center border border-slate-700 p-4">
-            <h3 className="text-2xl font-bold text-amber-500 mb-2">紫微斗數</h3>
-            <div className="text-slate-400 text-sm space-y-1 text-center">
+            <h3 className="text-3xl font-bold text-amber-500 mb-4">紫微斗數</h3>
+            <div className="text-slate-300 text-sm space-y-2 text-center font-medium">
                 <p>五行局: {bureauMap[chart.bureau] || chart.bureau}</p>
-                <p>命主: {chart.mingZhu || 'Unknown'}</p>
-                <p>身主: {chart.shenZhu || 'Unknown'}</p>
-                <p className="mt-2 text-xs text-slate-500">標準排盤系統 (Standard)</p>
+                <div className="flex gap-4 justify-center">
+                    <p>命主: {chart.mingZhu || 'Unknown'}</p>
+                    <p>身主: {chart.shenZhu || 'Unknown'}</p>
+                </div>
+                {chart.siHuaSummary && (
+                    <div className="mt-2 p-2 bg-slate-800 rounded border border-slate-700">
+                        <p className="text-xs text-slate-400 mb-1">生年四化</p>
+                        <p className="text-amber-400 text-base">{chart.siHuaSummary}</p>
+                    </div>
+                )}
+                <p className="mt-4 text-xs text-slate-500">標準排盤系統 (Standard v2.5)</p>
             </div>
         </div>
     );
 
+    // Increased gap slightly to accommodate fuller cards potentially?
+    // Kept grid strict for layout.
     return (
-        <div className="grid grid-cols-4 gap-1 w-full max-w-4xl mx-auto aspect-square bg-slate-900 p-1 rounded-lg shadow-2xl">
+        <div className="grid grid-cols-4 gap-1 w-full max-w-5xl mx-auto aspect-square bg-slate-900 p-1 rounded-lg shadow-2xl">
             {/* Row 1 */}
             {getPalaceElement(5)} {/* Si */}
             {getPalaceElement(6)} {/* Wu */}

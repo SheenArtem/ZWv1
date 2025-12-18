@@ -34,4 +34,5 @@ export interface ChartData {
     liuYueIndex?: number;
     mingZhu?: string;
     shenZhu?: string;
+    siHuaSummary?: string; // New: "祿:天同 權:太陰..."
 }

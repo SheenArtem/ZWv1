@@ -50,7 +50,6 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
     const ziWeiIndex = getZiWeiIndex(bureau, lunar.lunarDay);
     const majorStarsMap = calculateMajorStars(ziWeiIndex);
 
-    // Year Zhi
     const ZHI_CHARS = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
     const yearZhiChar = lunar.ganZhiYear.substring(1, 2);
     let yearZhiIndex = ZHI_CHARS.indexOf(yearZhiChar);
@@ -65,6 +64,12 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
     const auxStarsMap = calculateAuxiliaryStars(yearZhiIndex, lunar.lunarMonth, lunarHourIndex, lunar.lunarDay);
 
     const siHuaMap = calculateSiHua(yearGanIndex);
+    // Generate Si Hua Summary String
+    // e.g. "祿:廉貞 權:破軍 科:武曲 忌:太陽"
+    const siHuaSummary = Object.entries(siHuaMap).map(([star, type]) => {
+        const typeChar = { 'Lu': '祿', 'Quan': '權', 'Ke': '科', 'Ji': '忌' }[type];
+        return `${typeChar}: ${star}`;
+    }).join('  ');
 
     // 5. Gods
     const luCunPos = minorStarsMap['祿存'] || 0;
@@ -106,25 +111,23 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
                     name: starName,
                     type: 'major',
                     brightness: getBrightness(starName, b),
-                    mutagen: siHuaMap[starName] // Check if this major star has transformation
+                    mutagen: siHuaMap[starName]
                 });
             }
         }
 
         // Minor
         const cellMinorStars: Star[] = [];
-        // Basic Minor
         for (const [starName, starBranch] of Object.entries(minorStarsMap)) {
             if (starBranch === b) {
                 const isBad = ['擎羊', '陀羅', '火星', '鈴星', '地空', '地劫'].includes(starName);
                 cellMinorStars.push({
                     name: starName,
                     type: isBad ? 'bad' : 'minor',
-                    mutagen: siHuaMap[starName] // e.g. Wen Chang Hua Ke
+                    mutagen: siHuaMap[starName]
                 });
             }
         }
-        // Extended Aux
         for (const [starName, starBranch] of Object.entries(auxStarsMap)) {
             if (starBranch === b) {
                 cellMinorStars.push({
@@ -134,9 +137,6 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
                 });
             }
         }
-
-        // Sort Minor Stars? Maybe Aux at end. 
-        // Usually Bad/Good modifiers first, then small stars.
 
         const gods = godsCalc.getGods(b);
         const limits = limitsCalc.getLimits(b);
@@ -162,6 +162,7 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         liuNianIndex,
         liuYueIndex,
         mingZhu,
-        shenZhu
+        shenZhu,
+        siHuaSummary // New Field
     };
 };
