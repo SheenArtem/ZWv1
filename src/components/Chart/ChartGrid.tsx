@@ -30,26 +30,43 @@ export const ChartGrid: FC<ChartGridProps> = ({ chart }) => {
     };
 
     const CenterInfo = () => (
-        <div className="col-span-2 row-span-2 bg-slate-900 flex flex-col items-center justify-center border border-slate-700 p-4">
-            <h3 className="text-4xl font-bold text-amber-500 mb-4">紫微斗數</h3>
-            <div className="text-slate-300 text-base space-y-3 text-center font-medium w-full">
-                <p className="text-xl">五行局: {bureauMap[chart.bureau] || chart.bureau}</p>
-                <div className="flex gap-8 justify-center text-lg">
+        <div className="col-span-2 row-span-2 bg-slate-900 flex flex-col items-center justify-center border border-slate-700 p-2 overflow-y-auto">
+            <h3 className="text-3xl font-bold text-amber-500 mb-2">紫微斗數</h3>
+            <div className="text-slate-300 text-sm space-y-2 text-center font-medium w-full">
+                <div className="flex gap-4 justify-center text-base">
+                    <p>局數: {bureauMap[chart.bureau] || chart.bureau}</p>
                     <p>命主: {chart.mingZhu || 'Unknown'}</p>
                     <p>身主: {chart.shenZhu || 'Unknown'}</p>
                 </div>
 
-                {/* Si Hua Summary Section - More Prominent */}
-                {chart.siHuaSummary && (
-                    <div className="mt-4 p-4 bg-slate-800 rounded-lg border border-slate-600 shadow-inner w-3/4 mx-auto">
-                        <p className="text-sm text-slate-400 mb-2 font-bold uppercase tracking-widest">生年四化 (Year Trans.)</p>
-                        <p className="text-amber-400 text-xl font-bold tracking-wide">
-                            {chart.siHuaSummary}
-                        </p>
-                    </div>
-                )}
+                {/* Si Hua Summaries */}
+                <div className="flex flex-col gap-2 mt-2 w-full px-2">
+                    {chart.siHuaSummary && (
+                        <div className="p-2 bg-slate-800 rounded border border-slate-600 shadow-sm">
+                            <p className="text-xs text-slate-400 font-bold mb-1">生年四化 (Life)</p>
+                            <p className="text-amber-400 text-base font-bold tracking-wide">{chart.siHuaSummary}</p>
+                        </div>
+                    )}
 
-                <p className="mt-6 text-sm text-slate-500">標準排盤系統 (Standard v2.6)</p>
+                    {(chart.liuNianSiHuaSummary || chart.liuYueSiHuaSummary) && (
+                        <div className="grid grid-cols-1 gap-2">
+                            {chart.liuNianSiHuaSummary && (
+                                <div className="p-2 bg-slate-800 rounded border border-amber-900/50 shadow-sm">
+                                    <p className="text-xs text-amber-600 font-bold mb-1">流年四化 (Year)</p>
+                                    <p className="text-amber-500 text-sm font-bold tracking-wide">{chart.liuNianSiHuaSummary}</p>
+                                </div>
+                            )}
+                            {chart.liuYueSiHuaSummary && (
+                                <div className="p-2 bg-slate-800 rounded border border-emerald-900/50 shadow-sm">
+                                    <p className="text-xs text-emerald-600 font-bold mb-1">流月四化 (Month)</p>
+                                    <p className="text-emerald-500 text-sm font-bold tracking-wide">{chart.liuYueSiHuaSummary}</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                <p className="mt-2 text-xs text-slate-600">標準排盤系統 (v2.7)</p>
             </div>
         </div>
     );

@@ -40,7 +40,7 @@ function App() {
             </div>
 
             <footer className="w-full text-center p-4 text-slate-600 text-[14px] mt-8 border-t border-slate-800">
-                v2.6 專業版 (Min Font 14px & Prominent Si Hua) | ZWDS App
+                v2.7 專業版 (Prediction Si Hua & Dou Jun) | ZWDS App
             </footer>
         </div>
     );

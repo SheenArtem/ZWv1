@@ -34,5 +34,7 @@ export interface ChartData {
     liuYueIndex?: number;
     mingZhu?: string;
     shenZhu?: string;
-    siHuaSummary?: string; // New: "祿:天同 權:太陰..."
+    siHuaSummary?: string;      // Birth Year Si Hua
+    liuNianSiHuaSummary?: string; // Prediction Year Si Hua
+    liuYueSiHuaSummary?: string;  // Prediction Month Si Hua
 }

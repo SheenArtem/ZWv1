@@ -27,6 +27,20 @@ const getShenZhu = (yearBranchIndex: number): string => {
     return map[yearBranchIndex];
 };
 
+// Helper: Format Si Hua Map to String
+const formatSiHua = (map: Record<string, string>): string => {
+    return Object.entries(map).map(([star, type]) => {
+        const typeChar = { 'Lu': '祿', 'Quan': '權', 'Ke': '科', 'Ji': '忌' }[type];
+        return `${typeChar}: ${star}`;
+    }).join('  ');
+};
+
+const GAN_CHARS = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
+
+const getStemIndex = (char: string): number => {
+    return GAN_CHARS.indexOf(char);
+};
+
 export const generateChart = (input: BirthDetails, predictionDate?: Date): ChartData => {
     // 1. Convert to Lunar
     const lunar = convertToLunar(input);
@@ -35,9 +49,8 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
     const { mingIndex } = calculatePalaces(lunar);
 
     // 3. Palace Stems (Year Gan)
-    const GAN_CHARS = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
     const yearGanChar = lunar.ganZhiYear.substring(0, 1);
-    let yearGanIndex = GAN_CHARS.indexOf(yearGanChar);
+    let yearGanIndex = getStemIndex(yearGanChar);
     if (yearGanIndex === -1) {
         yearGanIndex = (lunar.lunarYear - 4) % 10;
         if (yearGanIndex < 0) yearGanIndex += 10;
@@ -64,12 +77,7 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
     const auxStarsMap = calculateAuxiliaryStars(yearZhiIndex, lunar.lunarMonth, lunarHourIndex, lunar.lunarDay);
 
     const siHuaMap = calculateSiHua(yearGanIndex);
-    // Generate Si Hua Summary String
-    // e.g. "祿:廉貞 權:破軍 科:武曲 忌:太陽"
-    const siHuaSummary = Object.entries(siHuaMap).map(([star, type]) => {
-        const typeChar = { 'Lu': '祿', 'Quan': '權', 'Ke': '科', 'Ji': '忌' }[type];
-        return `${typeChar}: ${star}`;
-    }).join('  ');
+    const siHuaSummary = formatSiHua(siHuaMap);
 
     // 5. Gods
     const luCunPos = minorStarsMap['祿存'] || 0;
@@ -78,19 +86,38 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
     // 6. Limits
     const limitsCalc = calculatelimits(mingIndex, bureau, input.gender, yearGanIndex);
 
-    // 7. Prediction Indices
+    // 7. Prediction Indices & Si Hua
     let liuNianIndex: number | undefined;
     let liuYueIndex: number | undefined;
+    let liuNianSiHuaSummary: string | undefined;
+    let liuYueSiHuaSummary: string | undefined;
+
     if (predictionDate) {
         const pSolar = Solar.fromDate(predictionDate);
         const pLunar = pSolar.getLunar();
+
+        // Liu Nian
         const pYear = pLunar.getYear();
         let pBranchIndex = (pYear - 4) % 12;
         if (pBranchIndex < 0) pBranchIndex += 12;
         liuNianIndex = calculateLiuNian(pBranchIndex);
+
+        // Liu Nian Si Hua
+        const pAvgYearGan = pLunar.getGanZhiYear().substring(0, 1);
+        const pYearGanIndex = getStemIndex(pAvgYearGan);
+        const lnSiHuaMap = calculateSiHua(pYearGanIndex);
+        liuNianSiHuaSummary = formatSiHua(lnSiHuaMap);
+
+        // Liu Yue
         const birthMonth = lunar.lunarMonth;
         const pMonth = Math.abs(pLunar.getMonth());
         liuYueIndex = calculateLiuYue(liuNianIndex, birthMonth, lunarHourIndex, pMonth);
+
+        // Liu Yue Si Hua
+        const pMonthGan = pLunar.getGanZhiMonth().substring(0, 1);
+        const pMonthGanIndex = getStemIndex(pMonthGan);
+        const lySiHuaMap = calculateSiHua(pMonthGanIndex);
+        liuYueSiHuaSummary = formatSiHua(lySiHuaMap);
     }
 
     // 8. Assemble
@@ -163,6 +190,8 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         liuYueIndex,
         mingZhu,
         shenZhu,
-        siHuaSummary // New Field
+        siHuaSummary,
+        liuNianSiHuaSummary,
+        liuYueSiHuaSummary
     };
 };
