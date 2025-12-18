@@ -105,7 +105,7 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         liuNianIndex = calculateLiuNian(pBranchIndex);
 
         // Liu Nian Si Hua
-        const pAvgYearGan = pLunar.getGanZhiYear().substring(0, 1);
+        const pAvgYearGan = pLunar.getYearInGanZhi().substring(0, 1);
         const pYearGanIndex = getStemIndex(pAvgYearGan);
         lnSiHuaMap = calculateSiHua(pYearGanIndex);
         liuNianSiHuaSummary = formatSiHua(lnSiHuaMap);
@@ -116,7 +116,7 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         liuYueIndex = calculateLiuYue(liuNianIndex, birthMonth, lunarHourIndex, pMonth);
 
         // Liu Yue Si Hua
-        const pMonthGan = pLunar.getGanZhiMonth().substring(0, 1);
+        const pMonthGan = pLunar.getMonthInGanZhi().substring(0, 1);
         const pMonthGanIndex = getStemIndex(pMonthGan);
         lySiHuaMap = calculateSiHua(pMonthGanIndex);
         liuYueSiHuaSummary = formatSiHua(lySiHuaMap);
