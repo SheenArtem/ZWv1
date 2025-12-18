@@ -17,7 +17,7 @@ export const InputForm = ({ onSubmit }: InputFormProps) => {
     });
 
     // Prediction Logic Toggle
-    const [showPrediction, setShowPrediction] = useState(false);
+    const [showPrediction, setShowPrediction] = useState(true);
     const [targetDate, setTargetDate] = useState(new Date().toISOString().split('T')[0]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
