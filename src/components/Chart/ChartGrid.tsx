@@ -13,21 +13,18 @@ export const ChartGrid: FC<ChartGridProps> = ({ chart }) => {
     // Mao             Xu
     // Yin  Chou Zi    Hai
 
-    // Indices:
-    // Si(5) Wu(6) Wei(7) Shen(8)
-    // Chen(4)            You(9)
-    // Mao(3)             Xu(10)
-    // Yin(2) Chou(1) Zi(0) Hai(11)
+    const getPalaceElement = (branchIndex: number) => {
+        const p = chart.palaces.find(p => p.branchIndex === branchIndex)!;
+        const isLiuNian = chart.liuNianIndex === branchIndex;
+        const isLiuYue = chart.liuYueIndex === branchIndex;
 
-    // We can use CSS Grid.
-    // 4 columns, 4 rows.
-    // Row 1: 5, 6, 7, 8
-    // Row 2: 4, Center, Center, 9
-    // Row 3: 3, Center, Center, 10
-    // Row 4: 2, 1, 0, 11
-
-    const getPalace = (branchIndex: number) => {
-        return chart.palaces.find(p => p.branchIndex === branchIndex)!;
+        return (
+            <PalaceCard
+                data={p}
+                isLiuNian={isLiuNian}
+                isLiuYue={isLiuYue}
+            />
+        );
     };
 
     const CenterInfo = () => (
@@ -43,26 +40,26 @@ export const ChartGrid: FC<ChartGridProps> = ({ chart }) => {
     return (
         <div className="grid grid-cols-4 gap-1 w-full max-w-4xl mx-auto aspect-square bg-slate-900 p-1 rounded-lg shadow-2xl">
             {/* Row 1 */}
-            <PalaceCard data={getPalace(5)} /> {/* Si */}
-            <PalaceCard data={getPalace(6)} /> {/* Wu */}
-            <PalaceCard data={getPalace(7)} /> {/* Wei */}
-            <PalaceCard data={getPalace(8)} /> {/* Shen */}
+            {getPalaceElement(5)} {/* Si */}
+            {getPalaceElement(6)} {/* Wu */}
+            {getPalaceElement(7)} {/* Wei */}
+            {getPalaceElement(8)} {/* Shen */}
 
             {/* Row 2 */}
-            <PalaceCard data={getPalace(4)} /> {/* Chen */}
+            {getPalaceElement(4)} {/* Chen */}
             <CenterInfo /> {/* Center Block spans 2x2 */}
-            <PalaceCard data={getPalace(9)} /> {/* You */}
+            {getPalaceElement(9)} {/* You */}
 
-            {/* Row 3 (Center block continues, so only side cells) */}
-            <PalaceCard data={getPalace(3)} /> {/* Mao */}
+            {/* Row 3 */}
+            {getPalaceElement(3)} {/* Mao */}
             {/* Center occupied */}
-            <PalaceCard data={getPalace(10)} /> {/* Xu */}
+            {getPalaceElement(10)} {/* Xu */}
 
             {/* Row 4 */}
-            <PalaceCard data={getPalace(2)} /> {/* Yin */}
-            <PalaceCard data={getPalace(1)} /> {/* Chou */}
-            <PalaceCard data={getPalace(0)} /> {/* Zi */}
-            <PalaceCard data={getPalace(11)} /> {/* Hai */}
+            {getPalaceElement(2)} {/* Yin */}
+            {getPalaceElement(1)} {/* Chou */}
+            {getPalaceElement(0)} {/* Zi */}
+            {getPalaceElement(11)} {/* Hai */}
         </div>
     );
 };

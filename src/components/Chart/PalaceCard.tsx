@@ -1,14 +1,16 @@
-import React from 'react';
+import { FC } from 'react';
 import { PalaceData } from '../../logic/models/ChartData';
 import clsx from 'clsx';
 
 interface PalaceCardProps {
     data: PalaceData;
     className?: string;
+    isLiuNian?: boolean;
+    isLiuYue?: boolean;
 }
 
-export const PalaceCard: React.FC<PalaceCardProps> = ({ data, className }) => {
-    // Chinese Mapping Helper (Simple for now)
+export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, isLiuYue }) => {
+    // Chinese Mapping Helper
     const branchMap: Record<string, string> = {
         'Zi': '子', 'Chou': '丑', 'Yin': '寅', 'Mao': '卯',
         'Chen': '辰', 'Si': '巳', 'Wu': '午', 'Wei': '未',
@@ -39,8 +41,6 @@ export const PalaceCard: React.FC<PalaceCardProps> = ({ data, className }) => {
 
     // Star Coloring
     const getStarColor = (star: string) => {
-        // Basic coloring logic: North Stars (Purple/Red?), South Stars (Green/Blue?)
-        // Simple visual distinction
         if (['Zi Wei', 'Tian Fu', 'Tai Yang', 'Tai Yin'].includes(star)) return 'text-red-400 font-bold';
         if (['Qi Sha', 'Po Jun', 'Tan Lang'].includes(star)) return 'text-blue-400 font-bold';
         return 'text-purple-300';
@@ -49,10 +49,23 @@ export const PalaceCard: React.FC<PalaceCardProps> = ({ data, className }) => {
     return (
         <div className={clsx(
             "relative bg-slate-800 border border-slate-700 p-2 flex flex-col justify-between h-36 sm:h-48 overflow-hidden",
-            className
+            className,
+            isLiuNian && "border-amber-500",
+            isLiuYue && !isLiuNian && "border-emerald-500"
         )}>
+            {isLiuNian && (
+                <div className="absolute top-0 right-0 bg-amber-600 text-[10px] px-1 rounded-bl text-white font-bold opacity-80 z-10">
+                    Year
+                </div>
+            )}
+            {isLiuYue && (
+                <div className="absolute top-0 left-0 bg-emerald-600 text-[10px] px-1 rounded-br text-white font-bold opacity-80 z-10">
+                    Month
+                </div>
+            )}
+
             {/* Stars Area */}
-            <div className="flex flex-col flex-wrap gap-1 content-start h-full pb-6">
+            <div className="flex flex-col flex-wrap gap-1 content-start h-full pb-6 pt-3">
                 {data.majorStars.map(star => (
                     <span key={star} className={clsx("text-sm writing-vertical-rl", getStarColor(star))}>
                         {starMap[star] || star}

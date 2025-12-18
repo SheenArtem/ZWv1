@@ -11,4 +11,6 @@ export interface PalaceData {
 export interface ChartData {
     bureau: number; // 2,3,4,5,6
     palaces: PalaceData[];
+    liuNianIndex?: number; // Index of the Current Year Palace
+    liuYueIndex?: number;  // Index of the Current Month Palace
 }
