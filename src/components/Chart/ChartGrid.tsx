@@ -4,9 +4,10 @@ import { PalaceCard } from './PalaceCard';
 
 interface ChartGridProps {
     chart: ChartData;
+    displayMode?: 'all' | 'birth' | 'year' | 'month';
 }
 
-export const ChartGrid: FC<ChartGridProps> = ({ chart }) => {
+export const ChartGrid: FC<ChartGridProps> = ({ chart, displayMode = 'all' }) => {
     const getPalaceElement = (branchIndex: number) => {
         const p = chart.palaces.find(p => p.branchIndex === branchIndex)!;
         const isLiuNian = chart.liuNianIndex === branchIndex;
@@ -17,6 +18,7 @@ export const ChartGrid: FC<ChartGridProps> = ({ chart }) => {
                 data={p}
                 isLiuNian={isLiuNian}
                 isLiuYue={isLiuYue}
+                displayMode={displayMode}
             />
         );
     };
@@ -41,7 +43,8 @@ export const ChartGrid: FC<ChartGridProps> = ({ chart }) => {
 
                 {/* Si Hua Summaries */}
                 <div className="flex flex-col gap-2 mt-2 w-full px-2">
-                    {chart.siHuaSummary && (
+                    {/* Birth Si Hua - Show if mode is 'all' or 'birth' */}
+                    {chart.siHuaSummary && (displayMode === 'all' || displayMode === 'birth') && (
                         <div className="p-2 bg-slate-800 rounded border border-slate-600 shadow-sm">
                             <p className="text-xs text-slate-400 font-bold mb-1">生年四化 (Life)</p>
                             <p className="text-amber-400 text-base font-bold tracking-wide">{chart.siHuaSummary}</p>
@@ -50,13 +53,15 @@ export const ChartGrid: FC<ChartGridProps> = ({ chart }) => {
 
                     {(chart.liuNianSiHuaSummary || chart.liuYueSiHuaSummary) && (
                         <div className="grid grid-cols-1 gap-2">
-                            {chart.liuNianSiHuaSummary && (
+                            {/* Liu Nian Si Hua - Show if mode is 'all' or 'year' */}
+                            {chart.liuNianSiHuaSummary && (displayMode === 'all' || displayMode === 'year') && (
                                 <div className="p-2 bg-slate-800 rounded border border-amber-900/50 shadow-sm">
                                     <p className="text-xs text-amber-600 font-bold mb-1">流年四化 (Year)</p>
                                     <p className="text-amber-500 text-sm font-bold tracking-wide">{chart.liuNianSiHuaSummary}</p>
                                 </div>
                             )}
-                            {chart.liuYueSiHuaSummary && (
+                            {/* Liu Yue Si Hua - Show if mode is 'all' or 'month' */}
+                            {chart.liuYueSiHuaSummary && (displayMode === 'all' || displayMode === 'month') && (
                                 <div className="p-2 bg-slate-800 rounded border border-emerald-900/50 shadow-sm">
                                     <p className="text-xs text-emerald-600 font-bold mb-1">流月四化 (Month)</p>
                                     <p className="text-emerald-500 text-sm font-bold tracking-wide">{chart.liuYueSiHuaSummary}</p>

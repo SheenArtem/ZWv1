@@ -7,16 +7,17 @@ interface PalaceCardProps {
     className?: string;
     isLiuNian?: boolean;
     isLiuYue?: boolean;
+    displayMode?: 'all' | 'birth' | 'year' | 'month';
 }
 
-export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, isLiuYue }) => {
+export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, isLiuYue, displayMode = 'all' }) => {
     // Badges text-sm (14px)
     const renderMutagens = (star: Star) => {
         const badges = [];
         const charMap: Record<string, string> = { 'Lu': '祿', 'Quan': '權', 'Ke': '科', 'Ji': '忌' };
 
         // Birth
-        if (star.mutagen) {
+        if (star.mutagen && (displayMode === 'all' || displayMode === 'birth')) {
             const colorMap: Record<string, string> = {
                 'Lu': 'bg-emerald-600 border-emerald-400 text-white',
                 'Quan': 'bg-red-600 border-red-400 text-white',
@@ -31,7 +32,7 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
         }
 
         // Liu Nian
-        if (star.liuNianMutagen) {
+        if (star.liuNianMutagen && (displayMode === 'all' || displayMode === 'year')) {
             badges.push(
                 <span key="liunian" className={clsx("ml-1 text-[12px] px-1 rounded border border-amber-500 bg-amber-900/80 text-amber-100 font-bold inline-block leading-tight transform scale-90")}>
                     流年 {charMap[star.liuNianMutagen]}
@@ -40,7 +41,7 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
         }
 
         // Liu Yue
-        if (star.liuYueMutagen) {
+        if (star.liuYueMutagen && (displayMode === 'all' || displayMode === 'month')) {
             badges.push(
                 <span key="liuyue" className={clsx("ml-1 text-[12px] px-1 rounded border border-emerald-500 bg-emerald-900/80 text-emerald-100 font-bold inline-block leading-tight transform scale-90")}>
                     流月 {charMap[star.liuYueMutagen]}
@@ -95,12 +96,12 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
             isLiuNian && "ring-2 ring-inset ring-amber-500",
             isLiuYue && !isLiuNian && "ring-2 ring-inset ring-emerald-500"
         )}>
-            {isLiuNian && (
+            {isLiuNian && (displayMode === 'all' || displayMode === 'year') && (
                 <div className="absolute top-0 right-0 bg-amber-600 text-[14px] px-1 text-white font-bold opacity-full z-20">
                     流年
                 </div>
             )}
-            {isLiuYue && (
+            {isLiuYue && (displayMode === 'all' || displayMode === 'month') && (
                 <div className="absolute top-0 right-12 bg-emerald-600 text-[14px] px-1 text-white font-bold opacity-full z-20">
                     流月
                 </div>

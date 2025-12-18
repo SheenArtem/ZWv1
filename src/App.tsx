@@ -7,6 +7,7 @@ import { generateChart } from './logic/ChartBuilder';
 
 function App() {
     const [chartData, setChartData] = useState<ChartData | null>(null);
+    const [activeTab, setActiveTab] = useState<'birth' | 'year' | 'month'>('birth');
 
     const handleGenerate = (details: BirthDetails, predictionDate?: Date) => {
         // Generate the chart using logic engine
@@ -27,14 +28,37 @@ function App() {
                 {!chartData ? (
                     <InputForm onSubmit={handleGenerate} />
                 ) : (
-                    <div className="animate-fade-in mt-10 flex flex-col items-center">
-                        <button
-                            onClick={() => setChartData(null)}
-                            className="mb-6 px-6 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-full transition-colors text-sm"
-                        >
-                            ← 返回輸入 (Back)
-                        </button>
-                        <ChartGrid chart={chartData} />
+                    <div className="animate-fade-in mt-10 flex flex-col items-center w-full">
+                        <div className="flex w-full justify-between items-center mb-6 max-w-6xl">
+                            <button
+                                onClick={() => setChartData(null)}
+                                className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-full transition-colors text-sm"
+                            >
+                                ← 返回輸入 (Back)
+                            </button>
+
+                            {/* Tabs for Prediction Mode */}
+                            {(chartData.liuNianIndex !== undefined) && (
+                                <div className="flex bg-slate-800 rounded-lg p-1 border border-slate-700">
+                                    {(['birth', 'year', 'month'] as const).map((mode) => (
+                                        <button
+                                            key={mode}
+                                            onClick={() => setActiveTab(mode)}
+                                            className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${activeTab === mode
+                                                ? 'bg-purple-600 text-white shadow-md'
+                                                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'
+                                                }`}
+                                        >
+                                            {mode === 'birth' && '本命盤 (Birth)'}
+                                            {mode === 'year' && '流年盤 (Year)'}
+                                            {mode === 'month' && '流月盤 (Month)'}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <ChartGrid chart={chartData} displayMode={activeTab} />
                     </div>
                 )}
             </div>
