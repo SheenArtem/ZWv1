@@ -1,9 +1,11 @@
 export type StarBrightness = 'Miao' | 'Wang' | 'De' | 'Li' | 'Ping' | 'Bu' | 'Xian';
+export type StarMutagen = 'Lu' | 'Quan' | 'Ke' | 'Ji'; // 祿, 權, 科, 忌
 
 export interface Star {
     name: string;
     type: 'major' | 'minor' | 'bad' | 'good' | 'aux';
     brightness?: string; // 廟, 旺...
+    mutagen?: StarMutagen; // Si Hua
 }
 
 export interface TwelveGods {
@@ -30,8 +32,6 @@ export interface ChartData {
     palaces: PalaceData[];
     liuNianIndex?: number;
     liuYueIndex?: number;
-
-    // New Masters
     mingZhu?: string;
     shenZhu?: string;
 }

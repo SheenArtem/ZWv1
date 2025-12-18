@@ -10,14 +10,34 @@ interface PalaceCardProps {
 }
 
 export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, isLiuYue }) => {
-    // Data is now guaranteed to be Chinese. No mapping needed.
+    // Mapping for Si Hua Colors
+    // Lu(Green/Red?), Quan(Blue?), Ke(Purple?), Ji(Red/Black?)
+    // Standard: Lu=Green, Quan=Red, Ke=Cyan, Ji=Black/Red bg.
+    // Tailwind colors: Lu=emerald-500, Quan=red-500, Ke=cyan-500, Ji=rose-600.
+
+    const getMutagenBadge = (m?: string) => {
+        if (!m) return null;
+        // Convert Code to Chinese
+        const charMap: Record<string, string> = { 'Lu': '祿', 'Quan': '權', 'Ke': '科', 'Ji': '忌' };
+        const colorMap: Record<string, string> = {
+            'Lu': 'bg-emerald-600 text-white',
+            'Quan': 'bg-red-600 text-white',
+            'Ke': 'bg-blue-500 text-white',
+            'Ji': 'bg-rose-700 text-white border-rose-900 border'
+        };
+
+        return (
+            <span className={clsx("ml-1 text-[10px] px-0.5 rounded font-bold leading-none inline-block align-middle", colorMap[m])}>
+                {charMap[m]}
+            </span>
+        );
+    };
 
     // Render Star
     const MajorStarItem = ({ star }: { star: Star }) => (
-        <div className="flex items-center gap-0.5 mb-1">
+        <div className="flex items-center gap-0.5 mb-1 flex-wrap">
             <span className={clsx(
                 "text-base font-bold",
-                // Check Chinese names for Red color set
                 ['紫微', '天府', '太陽', '太陰', '祿存'].includes(star.name) ? 'text-red-500' : 'text-purple-400'
             )}>
                 {star.name}
@@ -27,16 +47,20 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
                     {star.brightness}
                 </span>
             )}
+            {getMutagenBadge(star.mutagen)}
         </div>
     );
 
     const MinorStarItem = ({ star }: { star: Star }) => (
-        <span className={clsx(
-            "text-xs mr-1 mb-0.5 block",
-            star.type === 'bad' ? 'text-blue-400' : 'text-slate-300'
-        )}>
-            {star.name}
-        </span>
+        <div className="inline-block mr-1 mb-0.5">
+            <span className={clsx(
+                "text-xs",
+                star.type === 'bad' ? 'text-blue-400' : 'text-slate-300'
+            )}>
+                {star.name}
+            </span>
+            {getMutagenBadge(star.mutagen)}
+        </div>
     );
 
     const GodItem = ({ name, color }: { name: string, color: string }) => {
@@ -70,13 +94,13 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
                 <div className="w-1/2 flex flex-col pt-4 pl-1">
                     {data.majorStars.map(s => <MajorStarItem key={s.name} star={s} />)}
                 </div>
-                <div className="w-1/2 flex flex-col pt-4 pr-1 items-end text-right">
+                <div className="w-1/2 flex flex-col pt-4 pr-1 items-end text-right flex-wrap content-start">
                     {data.minorStars.map(s => <MinorStarItem key={s.name} star={s} />)}
                 </div>
             </div>
 
             {/* Bottom Area */}
-            <div className="absolute bottom-0 w-full flex flex-col px-1 pb-0.5 bg-gradient-to-t from-slate-900 to-transparent pt-4">
+            <div className="absolute bottom-0 w-full flex flex-col px-1 pb-0.5 bg-gradient-to-t from-slate-900 via-slate-900 to-transparent pt-4">
                 <div className="flex justify-between text-[10px] mb-0.5">
                     <div className="flex gap-1">
                         <GodItem name={data.gods.changSheng} color="text-amber-600" />

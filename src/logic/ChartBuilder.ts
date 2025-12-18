@@ -7,8 +7,10 @@ import { getBureau } from './calculators/FiveElements';
 import { getZiWeiIndex, calculateMajorStars } from './calculators/StarCalculator';
 import { calculateLiuNian, calculateLiuYue } from './calculators/TimeCalculator';
 import { calculateMinorStars } from './calculators/MinorStarCalculator';
+import { calculateAuxiliaryStars } from './calculators/AuxiliaryStarCalculator';
 import { calculateTwelveGods } from './calculators/TwelveGodsCalculator';
 import { getBrightness } from './calculators/StarBrightnessMap';
+import { calculateSiHua } from './calculators/SiHuaCalculator';
 import { calculatelimits, calculateAgesInPalace } from './calculators/LimitCalculator';
 import { HEAVENLY_STEMS, EARTHLY_BRANCHES, ZWDS_PALACE_NAMES } from './constants';
 import LunarJS from 'lunar-javascript';
@@ -16,17 +18,11 @@ const { Solar } = LunarJS;
 
 // Masters Logic
 const getMingZhu = (mingPadIndex: number): string => {
-    // Ming branch: Zi(0)..Hai(11)
-    // Zi: Tan Lang, Chou: Ju Men, Yin: Lu Cun, Mao: Wen Qu, Chen: Lian Zhen, Si: Wu Qu
-    // Wu: Po Jun, Wei: Wu Qu, Shen: Lian Zhen, You: Wen Qu, Xu: Lu Cun, Hai: Ju Men
     const map = ['貪狼', '巨門', '祿存', '文曲', '廉貞', '武曲', '破軍', '武曲', '廉貞', '文曲', '祿存', '巨門'];
     return map[mingPadIndex];
 };
 
 const getShenZhu = (yearBranchIndex: number): string => {
-    // Year branch: Zi(0)..Hai(11)
-    // Zi: Huo Xing, Chou: Tian Xiang, Yin: Tian Liang, Mao: Tian Tong, Chen: Wen Chang, Si: Tian Ji
-    // Wu: Huo Xing, Wei: Tian Xiang, Shen: Tian Liang, You: Tian Tong, Xu: Wen Chang, Hai: Tian Ji
     const map = ['火星', '天相', '天梁', '天同', '文昌', '天機', '火星', '天相', '天梁', '天同', '文昌', '天機'];
     return map[yearBranchIndex];
 };
@@ -38,32 +34,23 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
     // 2. Palace Positions
     const { mingIndex } = calculatePalaces(lunar);
 
-    // 3. Palace Stems
-    // Determine Year Gan Index for Wu Hu Dun
-    // ZWDS uses Lunar Year Gan. 
-    // 'Jia'(0) etc.
+    // 3. Palace Stems (Year Gan)
     const GAN_CHARS = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
     const yearGanChar = lunar.ganZhiYear.substring(0, 1);
     let yearGanIndex = GAN_CHARS.indexOf(yearGanChar);
     if (yearGanIndex === -1) {
-        // Fallback if parsing failed
         yearGanIndex = (lunar.lunarYear - 4) % 10;
         if (yearGanIndex < 0) yearGanIndex += 10;
     }
-
     const stems = getPalaceStemIndices(yearGanIndex);
-
-    // 4. Bureau
-    // Ming Stem comes from stems[mingIndex]
     const mingStemIndex = stems[mingIndex];
     const bureau = getBureau(mingStemIndex, mingIndex);
 
-    // 5. Major Stars
+    // 4. Stars & Mutagens
     const ziWeiIndex = getZiWeiIndex(bureau, lunar.lunarDay);
     const majorStarsMap = calculateMajorStars(ziWeiIndex);
 
-    // 6. Minor Stars
-    // Year Branch (Zhi) Index
+    // Year Zhi
     const ZHI_CHARS = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
     const yearZhiChar = lunar.ganZhiYear.substring(1, 2);
     let yearZhiIndex = ZHI_CHARS.indexOf(yearZhiChar);
@@ -71,86 +58,85 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         yearZhiIndex = (lunar.lunarYear - 4) % 12;
         if (yearZhiIndex < 0) yearZhiIndex += 12;
     }
-
     const lunarHourIndex = Math.floor((input.hour + 1) / 2) % 12;
 
     const minorStarsMap = calculateMinorStars(yearGanIndex, lunar.lunarMonth, lunarHourIndex, yearZhiIndex);
 
-    // 7. Gods
-    // Lu Cun is Chinese key now.
+    const auxStarsMap = calculateAuxiliaryStars(yearZhiIndex, lunar.lunarMonth, lunarHourIndex, lunar.lunarDay);
+
+    const siHuaMap = calculateSiHua(yearGanIndex);
+
+    // 5. Gods
     const luCunPos = minorStarsMap['祿存'] || 0;
+    const godsCalc = calculateTwelveGods(bureau, input.gender, yearGanIndex, luCunPos, yearZhiIndex);
 
-    const godsCalc = calculateTwelveGods(
-        bureau,
-        input.gender,
-        yearGanIndex,
-        luCunPos,
-        yearZhiIndex
-    );
-
-    // 8. Limits
+    // 6. Limits
     const limitsCalc = calculatelimits(mingIndex, bureau, input.gender, yearGanIndex);
 
-    // 9. Prediction
+    // 7. Prediction Indices
     let liuNianIndex: number | undefined;
     let liuYueIndex: number | undefined;
-
     if (predictionDate) {
         const pSolar = Solar.fromDate(predictionDate);
         const pLunar = pSolar.getLunar();
         const pYear = pLunar.getYear();
         let pBranchIndex = (pYear - 4) % 12;
         if (pBranchIndex < 0) pBranchIndex += 12;
-
         liuNianIndex = calculateLiuNian(pBranchIndex);
-
         const birthMonth = lunar.lunarMonth;
         const pMonth = Math.abs(pLunar.getMonth());
         liuYueIndex = calculateLiuYue(liuNianIndex, birthMonth, lunarHourIndex, pMonth);
     }
 
-    // 10. Masters
+    // 8. Assemble
+    const palaces: PalaceData[] = [];
     const mingZhu = getMingZhu(mingIndex);
     const shenZhu = getShenZhu(yearZhiIndex);
 
-    // 11. Assemble
-    const palaces: PalaceData[] = [];
-
     for (let b = 0; b < 12; b++) {
         const stemIdx = stems[b];
-        // Palace Name: Shifted so Ming is at mingIndex.
-        // Logic: Name Index 0 (Life) is at mingIndex. 
-        // Name Index 1 (Siblings) is at mingIndex - 1.
-        // So Name Index i is at mingIndex - i.
-        // Reverse: At branch b, what is Name Index?
-        // b = mingIndex - i => i = mingIndex - b.
         const nameIndex = (mingIndex - b + 12) % 12;
         const pName = ZWDS_PALACE_NAMES[nameIndex];
 
-        // Collect Major Stars
+        // Major
         const cellMajorStars: Star[] = [];
         for (const [starName, starBranch] of Object.entries(majorStarsMap)) {
             if (starBranch === b) {
                 cellMajorStars.push({
                     name: starName,
                     type: 'major',
-                    // Brightness map now expects Chinese keys
-                    brightness: getBrightness(starName, b)
+                    brightness: getBrightness(starName, b),
+                    mutagen: siHuaMap[starName] // Check if this major star has transformation
                 });
             }
         }
 
-        // Collect Minor Stars
+        // Minor
         const cellMinorStars: Star[] = [];
+        // Basic Minor
         for (const [starName, starBranch] of Object.entries(minorStarsMap)) {
             if (starBranch === b) {
                 const isBad = ['擎羊', '陀羅', '火星', '鈴星', '地空', '地劫'].includes(starName);
                 cellMinorStars.push({
                     name: starName,
-                    type: isBad ? 'bad' : 'minor'
+                    type: isBad ? 'bad' : 'minor',
+                    mutagen: siHuaMap[starName] // e.g. Wen Chang Hua Ke
                 });
             }
         }
+        // Extended Aux
+        for (const [starName, starBranch] of Object.entries(auxStarsMap)) {
+            if (starBranch === b) {
+                cellMinorStars.push({
+                    name: starName,
+                    type: 'aux',
+                    mutagen: siHuaMap[starName]
+                });
+            }
+        }
+
+        // Sort Minor Stars? Maybe Aux at end. 
+        // Usually Bad/Good modifiers first, then small stars.
 
         const gods = godsCalc.getGods(b);
         const limits = limitsCalc.getLimits(b);
@@ -163,7 +149,7 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
             stemName: HEAVENLY_STEMS[stemIdx],
             palaceName: pName,
             majorStars: cellMajorStars,
-            minorStars: cellMinorStars,
+            minorStars: cellMinorStars, // includes Aux now
             gods,
             daXian: limits.daXian,
             xiaoXian: ages

@@ -40,7 +40,7 @@ function App() {
             </div>
 
             <footer className="w-full text-center p-4 text-slate-600 text-xs mt-8 border-t border-slate-800">
-                v2.3 專業版 (Visual Polish) | ZWDS App
+                v2.4 專業版詳細 (Extended Stars & Si Hua) | ZWDS App
             </footer>
         </div>
     );
