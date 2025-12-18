@@ -27,12 +27,20 @@ export const ChartGrid: FC<ChartGridProps> = ({ chart }) => {
         );
     };
 
+    const bureauMap: Record<number, string> = {
+        2: '水二局',
+        3: '木三局',
+        4: '金四局',
+        5: '土五局',
+        6: '火六局'
+    };
+
     const CenterInfo = () => (
         <div className="col-span-2 row-span-2 bg-slate-900 flex flex-col items-center justify-center border border-slate-700 p-4">
-            <h3 className="text-2xl font-bold text-amber-500 mb-2">Zi Wei Dou Shu</h3>
+            <h3 className="text-2xl font-bold text-amber-500 mb-2">紫微斗數</h3>
             <div className="text-slate-400 text-sm">
-                <p>Bureau: {chart.bureau} (Phase)</p>
-                <p>System: Standard</p>
+                <p>五行局: {bureauMap[chart.bureau] || chart.bureau}</p>
+                <p>排盤系統: 標準 (Standard)</p>
             </div>
         </div>
     );

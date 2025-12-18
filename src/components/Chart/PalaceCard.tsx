@@ -55,12 +55,12 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
         )}>
             {isLiuNian && (
                 <div className="absolute top-0 right-0 bg-amber-600 text-[10px] px-1 rounded-bl text-white font-bold opacity-80 z-10">
-                    Year
+                    流年
                 </div>
             )}
             {isLiuYue && (
                 <div className="absolute top-0 left-0 bg-emerald-600 text-[10px] px-1 rounded-br text-white font-bold opacity-80 z-10">
-                    Month
+                    流月
                 </div>
             )}
 
