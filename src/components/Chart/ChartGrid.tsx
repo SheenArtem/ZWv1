@@ -51,27 +51,24 @@ export const ChartGrid: FC<ChartGridProps> = ({ chart, displayMode = 'all' }) =>
                         </div>
                     )}
 
-                    {(chart.liuNianSiHuaSummary || chart.liuYueSiHuaSummary) && (
-                        <div className="grid grid-cols-1 gap-2">
-                            {/* Liu Nian Si Hua - Show if mode is 'all' or 'year' */}
-                            {chart.liuNianSiHuaSummary && (displayMode === 'all' || displayMode === 'year') && (
-                                <div className="p-2 bg-slate-800 rounded border border-amber-900/50 shadow-sm">
-                                    <p className="text-xs text-amber-600 font-bold mb-1">流年四化 (Year)</p>
-                                    <p className="text-amber-500 text-sm font-bold tracking-wide">{chart.liuNianSiHuaSummary}</p>
-                                </div>
-                            )}
-                            {/* Liu Yue Si Hua - Show if mode is 'all' or 'month' */}
-                            {chart.liuYueSiHuaSummary && (displayMode === 'all' || displayMode === 'month') && (
-                                <div className="p-2 bg-slate-800 rounded border border-emerald-900/50 shadow-sm">
-                                    <p className="text-xs text-emerald-600 font-bold mb-1">流月四化 (Month)</p>
-                                    <p className="text-emerald-500 text-sm font-bold tracking-wide">{chart.liuYueSiHuaSummary}</p>
-                                </div>
-                            )}
+                    {/* Liu Nian Si Hua - Show if mode is 'all' or 'year' */}
+                    {chart.liuNianSiHuaSummary && (displayMode === 'all' || displayMode === 'year') && (
+                        <div className="p-2 bg-slate-800 rounded border border-amber-900/50 shadow-sm">
+                            <p className="text-xs text-amber-600 font-bold mb-1">流年四化 (Year)</p>
+                            <p className="text-amber-500 text-sm font-bold tracking-wide">{chart.liuNianSiHuaSummary}</p>
+                        </div>
+                    )}
+
+                    {/* Liu Yue Si Hua - Show if mode is 'all' or 'month' */}
+                    {chart.liuYueSiHuaSummary && (displayMode === 'all' || displayMode === 'month') && (
+                        <div className="p-2 bg-slate-800 rounded border border-emerald-900/50 shadow-sm">
+                            <p className="text-xs text-emerald-600 font-bold mb-1">流月四化 (Month)</p>
+                            <p className="text-emerald-500 text-sm font-bold tracking-wide">{chart.liuYueSiHuaSummary}</p>
                         </div>
                     )}
                 </div>
 
-                <p className="mt-2 text-xs text-slate-600">標準排盤系統 (v3.0)</p>
+                <p className="mt-2 text-xs text-slate-600">標準排盤系統 (v3.1)</p>
             </div>
         </div>
     );
