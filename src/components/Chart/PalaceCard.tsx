@@ -23,7 +23,7 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
                 {star.name}
             </span>
             {star.brightness && (
-                <span className="text-[11px] text-slate-500 scale-90 origin-left font-normal bg-slate-800 rounded px-0.5">
+                <span className="text-[11px] text-slate-500 font-normal bg-slate-800 rounded px-0.5">
                     {star.brightness}
                 </span>
             )}
