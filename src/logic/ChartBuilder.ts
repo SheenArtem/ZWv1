@@ -294,7 +294,7 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         }
         for (const [starName, starBranch] of Object.entries(auxStarsMap)) {
             if (starBranch === b) {
-                // Name Aliasing for Reference 1983 Consistency
+                // Standard Name Aliasing
                 let displayName = starName;
                 if (starName === '旬空1' || starName === '旬空2') displayName = '旬空';
 
