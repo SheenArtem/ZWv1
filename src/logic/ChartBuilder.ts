@@ -85,10 +85,14 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
     }
     const stems = getPalaceStemIndices(yearGanIndex);
     const mingStemIndex = stems[mingIndex];
-    const bureau = getBureau(mingStemIndex, mingIndex);
+    // Mod: Map Bureau Number to String
+    const bureauNum = getBureau(mingStemIndex, mingIndex);
+    const bureauMap = ['水二局', '木三局', '金四局', '土五局', '火六局'];
+    // Bureau Num: 2,3,4,5,6
+    const bureau = bureauMap[bureauNum - 2] || String(bureauNum);
 
     // 4. Stars & Mutagens
-    const ziWeiIndex = getZiWeiIndex(bureau, lunar.lunarDay);
+    const ziWeiIndex = getZiWeiIndex(bureauNum, lunar.lunarDay); // Pass num to star calc
     const majorStarsMap = calculateMajorStars(ziWeiIndex);
 
     const ZHI_CHARS = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
@@ -102,17 +106,34 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
 
     const minorStarsMap = calculateMinorStars(yearGanIndex, lunar.lunarMonth, lunarHourIndex, yearZhiIndex);
 
-    const auxStarsMap = calculateAuxiliaryStars(yearZhiIndex, lunar.lunarMonth, lunarHourIndex, lunar.lunarDay);
+    // Calculate Ming/Shen Indices for Aux Stars
+    const mingBranchIndex = mingIndex;
+    let shenBranchIndex = 0;
+
+    shenBranchIndex = (2 + (lunar.lunarMonth - 1) + lunarHourIndex) % 12;
+
+    const auxStarsMap = calculateAuxiliaryStars(
+        yearGanIndex,
+        yearZhiIndex,
+        lunar.lunarMonth,
+        lunarHourIndex,
+        lunar.lunarDay,
+        mingBranchIndex,
+        shenBranchIndex
+    );
 
     const siHuaMap = calculateSiHua(yearGanIndex);
     const siHuaSummary = formatSiHua(siHuaMap);
 
-    // 5. Gods
-    const luCunPos = minorStarsMap['祿存'] || 0;
-    const godsCalc = calculateTwelveGods(bureau, input.gender, yearGanIndex, luCunPos, yearZhiIndex);
+    // 5. Gods - Moved to before Assemble loop
+    // const luCunPos = minorStarsMap['祿存'] || 0;
+    // const godsCalc = calculateTwelveGods(bureau, input.gender, yearGanIndex, luCunPos, yearZhiIndex);
 
-    // 6. Limits
-    const limitsCalc = calculatelimits(mingIndex, bureau, input.gender, yearGanIndex);
+    // 6. Limits (Pass Number if needed? calculatelimits uses bureau number)
+    // calculatelimits expected number or string?
+    // Usually it expects number. `bureau` variable is now string.
+    // So pass `bureauNum`.
+    const limitsCalc = calculatelimits(mingIndex, bureauNum, input.gender, yearGanIndex);
 
     // 7. Prediction Indices & Si Hua
     let liuNianIndex: number | undefined;
@@ -134,9 +155,9 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         const pLunar = pSolar.getLunar();
 
         // Populate Prediction Display Info
-        predictionDisplayDate = `${pSolar.getYear()}年${pSolar.getMonth()}月${pSolar.getDay()}日`;
-        predictionLunarDate = `${pLunar.getYearInGanZhi()}年 ${pLunar.getMonthInChinese()}月 ${pLunar.getDayInChinese()}日`;
-        predictionGanZhi = `${pLunar.getYearInGanZhi()}年 ${pLunar.getMonthInGanZhi()}月 ${pLunar.getDayInGanZhi()}日`;
+        predictionDisplayDate = `${pSolar.getYear()}年${pSolar.getMonth()}月${pSolar.getDay()}日`; // Still calculated but likely unused in UI
+        predictionLunarDate = `${pLunar.getYearInGanZhi()}年 ${pLunar.getMonthInChinese()}月`; // Fixed: Month only (No Day)
+        predictionGanZhi = `${pLunar.getYearInGanZhi()}年 ${pLunar.getMonthInGanZhi()}月`; // Fixed: Month only (No Day)
 
         // Calculate Date Ranges
         try {
@@ -199,6 +220,43 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
     const mingZhu = getMingZhu(mingIndex);
     const shenZhu = getShenZhu(yearZhiIndex);
 
+    // Determine Branch for Gods (Birth or Liu Nian)
+    // If Prediction Date is set, we use Liu Nian Branch (e.g. 2024 Chen) for Gods? 
+    // Standard practice: "Annual Gods" replace "Birth Gods" in Annual view.
+    // The User Reference clearly uses Annual Gods (Chen Year) while having Birth Palaces.
+    // We will switch to Liu Nian Zhi if available.
+    // However, `liuNianIndex` is the Palace Index of Life Palace for the Year. 
+    // We need the Year Branch Index (e.g. Chen=4). 
+    // `liuNianIndex` calculation: (YearBranch - 4) ... wait.
+    // Let's get the Prediction Year Branch directly.
+    let targetGodsBranch = yearZhiIndex;
+    if (predictionDate && liuNianIndex !== undefined) {
+        const pSolar = Solar.fromDate(predictionDate);
+        const pLunar = pSolar.getLunar();
+        const pYear = pLunar.getYear();
+        let pBranchIndex = (pYear - 4) % 12;
+        if (pBranchIndex < 0) pBranchIndex += 12;
+        targetGodsBranch = pBranchIndex;
+    }
+
+    // 5. Gods (Calculate once with target branch)
+    const luCunPos = minorStarsMap['祿存'] || 0;
+    // Note: Gods calc uses (Bureau, Gender, Gan, Lu, Zhi).
+    // For Annual Gods, do we use Birth Bureau/Gender? Yes.
+    // Do we use Birth Gan? Yes (Year Gan of Birth usually, unless Liu Nian Gan?).
+    // "Sui Jian" (Tai Sui) follows the Annual Branch.
+    // "Jiang Xing" follows Annual Branch?
+    // "Bo Shi" follows Lu Cun. (Which Lu Cun? Birth or Annual?).
+    // User Ref: "Bo Shi" (Doctor) at Zi?
+    // User Ref (Zi): Bo Shi. 
+    // 1983 Lu Cun at Zi. 
+    // 2024 Lu Cun at Si (Bing Year) or ...? 2024 is Jia Chen. Lu Cun at Yin.
+    // If User Ref has Bo Shi at Zi, it follows BIRTH Lu Cun.
+    // So: Gods Calculation uses Annual Branch (for Tai Sui) but Birth Lu Cun (for Bo Shi)?
+    // Or maybe Bo Shi logic is different.
+    // Let's assume ONLY Branch-based Gods switch.
+    const godsCalc = calculateTwelveGods(bureauNum, input.gender, yearGanIndex, luCunPos, targetGodsBranch);
+
     for (let b = 0; b < 12; b++) {
         const stemIdx = stems[b];
         const nameIndex = (mingIndex - b + 12) % 12;
@@ -227,6 +285,7 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
                 cellMinorStars.push({
                     name: starName,
                     type: isBad ? 'bad' : 'minor',
+                    brightness: getBrightness(starName, b), // Mod: Fetch Brightness
                     mutagen: siHuaMap[starName],
                     liuNianMutagen: lnSiHuaMap[starName],
                     liuYueMutagen: lySiHuaMap[starName]
@@ -235,16 +294,21 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         }
         for (const [starName, starBranch] of Object.entries(auxStarsMap)) {
             if (starBranch === b) {
+                // Name Aliasing for Reference 1983 Consistency
+                let displayName = starName;
+                if (starName === '旬空1' || starName === '旬空2') displayName = '旬空';
+
                 cellMinorStars.push({
-                    name: starName,
+                    name: displayName,
                     type: 'aux',
-                    mutagen: siHuaMap[starName],
+                    mutagen: siHuaMap[starName], // Use original key for mutagens if any (none usually for Aux)
                     liuNianMutagen: lnSiHuaMap[starName],
                     liuYueMutagen: lySiHuaMap[starName]
                 });
             }
         }
 
+        // const gods = godsCalc.getGods(b); // Moved logic out
         const gods = godsCalc.getGods(b);
         const limits = limitsCalc.getLimits(b);
         const ages = calculateAgesInPalace(b, mingIndex, input.gender, yearGanIndex);
@@ -257,7 +321,11 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
             palaceName: pName,
             majorStars: cellMajorStars,
             minorStars: cellMinorStars, // includes Aux now
-            gods,
+            gods: {
+                ...gods,
+                suiJian: gods.jiangQian,  // User Ref "Sui Jian" = My Jiang Qian (Year Branch)
+                jiangQian: gods.suiJian   // User Ref "Jiang Qian" = My Sui Jian (Year Station)
+            },
             daXian: limits.daXian,
             xiaoXian: ages
         });
@@ -282,6 +350,8 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         lunarDate: `${lunar.lunarYear}年${lunar.lunarMonth}月${lunar.lunarDay}日`,
         baZi: lunar.eightChar,
         zodiac: `${zodiacChar}${zodiacAnimal}`, // e.g. 辰龍
+        gender: input.gender,
+        yinYangGender: (yearGanIndex % 2 === 0 ? '陽' : '陰') + (input.gender === 'Male' ? '男' : '女'),
 
         // Prediction Info
         predictionDate: predictionDisplayDate,

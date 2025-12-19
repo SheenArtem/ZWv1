@@ -22,8 +22,8 @@ export const calculateMinorStars = (
     // Yue=7,8,9,9,7,8,7,2,5,5
     const kuiMap = [1, 0, 11, 11, 1, 0, 1, 6, 3, 3];
     const yueMap = [7, 8, 9, 9, 7, 8, 7, 2, 5, 5];
-    stars['天鉞'] = kuiMap[yearGanIndex]; // Tian Kui (Wait, mapping check?)
-    stars['天魁'] = yueMap[yearGanIndex];
+    stars['天魁'] = kuiMap[yearGanIndex];
+    stars['天鉞'] = yueMap[yearGanIndex];
     // Wait, previous file had Kui=yueMap? 
     // "Jia Wu Geng Niu(Chou) Yang(Wei)". 
     // Standard: Gui Ren (Noble): Day Noble (Kui), Night Noble (Yue).

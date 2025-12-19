@@ -23,19 +23,12 @@ function App() {
     return (
         <div className="min-h-screen bg-slate-950 text-white flex flex-col h-screen overflow-hidden">
             {/* Header */}
-            <header className="bg-slate-900 border-b border-slate-800 p-2 shadow-sm shrink-0 z-20">
-                <div className="max-w-7xl mx-auto flex justify-between items-center px-4">
-                    <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
-                        紫微斗數 v3.4
-                    </h1>
-                    <span className="text-sm text-slate-500">專業紫微斗數排盤系統</span>
-                </div>
-            </header>
+
 
             {/* Main Content Area */}
             <div className="flex flex-1 overflow-hidden">
                 {/* Left Sidebar: Input Form */}
-                <aside className="w-[400px] bg-slate-900 border-r border-slate-800 overflow-y-auto shrink-0 hidden md:block z-10 p-4">
+                <aside className="w-[400px] bg-slate-900 border-r border-slate-800 overflow-y-auto shrink-0 hidden md:flex md:flex-col z-10 p-4">
                     <InputForm onSubmit={handleGenerate} />
 
                     {/* View Mode Switching Controls - Sticky Logic or just below input */}
@@ -61,6 +54,12 @@ function App() {
                             </div>
                         </div>
                     )}
+
+                    <div className="mt-auto pt-4 pb-2 text-center opacity-80 hover:opacity-100 transition-opacity">
+                        <h1 className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
+                            紫微斗數 v3.5.5
+                        </h1>
+                    </div>
                 </aside>
 
                 {/* Mobile Input Toggle (Visible only on small screens) */}

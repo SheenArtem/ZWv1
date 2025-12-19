@@ -10,6 +10,10 @@ export const SUI_JIAN_12 = [
     '歲建', '晦氣', '喪門', '貫索', '官符', '小耗', '大耗', '龍德', '白虎', '天德', '弔客', '病符'
 ];
 
+export const JIANG_QIAN_12 = [
+    '將星', '攀鞍', '歲驛', '息神', '華蓋', '劫煞', '災煞', '天煞', '指背', '咸池', '月煞', '亡神'
+];
+
 export const calculateTwelveGods = (
     bureau: number,
     gender: 'Male' | 'Female',
@@ -60,10 +64,27 @@ export const calculateTwelveGods = (
             const sSteps = (palaceBranch - yearBranchIndex + 12) % 12;
             const sj = SUI_JIAN_12[sSteps];
 
+            // Jiang Qian
+            // Find Jiang Xing Position (Triad leader)
+            // Shen-Zi-Chen (8,0,4) -> Zi(0)
+            // Si-You-Chou (5,9,1) -> You(9)
+            // Hai-Mao-Wei (11,3,7) -> Mao(3)
+            // Yin-Wu-Xu (2,6,10) -> Wu(6)
+            let jiangXingPos = 0;
+            const yb = yearBranchIndex;
+            if ([8, 0, 4].includes(yb)) jiangXingPos = 0;
+            else if ([5, 9, 1].includes(yb)) jiangXingPos = 9;
+            else if ([11, 3, 7].includes(yb)) jiangXingPos = 3;
+            else jiangXingPos = 6;
+
+            const jqSteps = (palaceBranch - jiangXingPos + 12) % 12;
+            const jq = JIANG_QIAN_12[jqSteps];
+
             return {
                 changSheng: cs,
                 boShi: bs,
-                suiJian: sj
+                suiJian: sj,
+                jiangQian: jq
             };
         }
     };

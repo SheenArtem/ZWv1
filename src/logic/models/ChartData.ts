@@ -14,6 +14,7 @@ export interface TwelveGods {
     changSheng: string;
     boShi: string;
     suiJian: string;
+    jiangQian: string;
 }
 
 export interface PalaceData {
@@ -26,11 +27,11 @@ export interface PalaceData {
     minorStars: Star[];
     gods: TwelveGods;
     daXian: string;
-    xiaoXian: string;
+    xiaoXian: number[] | string;
 }
 
 export interface ChartData {
-    bureau: number;
+    bureau: string;
     palaces: PalaceData[];
     liuNianIndex?: number;
     liuYueIndex?: number;
@@ -45,6 +46,9 @@ export interface ChartData {
     lunarDate?: string;
     baZi?: string;
     zodiac?: string;
+    gender?: 'Male' | 'Female';
+    yinYangGender?: string; // 陽男, 陰女...
+
 
     // Prediction Display Info
     predictionDate?: string;
