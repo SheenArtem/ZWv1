@@ -7,7 +7,7 @@ import { generateChart } from './logic/ChartBuilder';
 
 function App() {
     const [chartData, setChartData] = useState<ChartData | null>(null);
-    const [activeTab, setActiveTab] = useState<'birth' | 'year' | 'month'>('birth');
+    const [activeTab, setActiveTab] = useState<'birth' | 'year' | 'month' | 'stacked'>('birth');
 
     const handleGenerate = (details: BirthDetails, predictionDate?: Date) => {
         try {
@@ -21,56 +21,71 @@ function App() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-900 text-white py-10 px-4 flex flex-col">
-            <div className="max-w-6xl mx-auto flex-grow w-full">
-                <header className="text-center mb-10">
-                    <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
-                        紫微斗數 (Zi Wei Dou Shu)
+        <div className="min-h-screen bg-slate-950 text-white flex flex-col h-screen overflow-hidden">
+            {/* Header */}
+            <header className="bg-slate-900 border-b border-slate-800 p-2 shadow-sm shrink-0 z-20">
+                <div className="max-w-7xl mx-auto flex justify-between items-center px-4">
+                    <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
+                        紫微斗數 v3.4
                     </h1>
-                    <p className="text-slate-400 mt-2">專業排盤系統 (Professional Astrological Chart Generation)</p>
-                </header>
+                    <span className="text-sm text-slate-500">專業紫微斗數排盤系統</span>
+                </div>
+            </header>
 
-                {!chartData ? (
+            {/* Main Content Area */}
+            <div className="flex flex-1 overflow-hidden">
+                {/* Left Sidebar: Input Form */}
+                <aside className="w-[400px] bg-slate-900 border-r border-slate-800 overflow-y-auto shrink-0 hidden md:block z-10 p-4">
                     <InputForm onSubmit={handleGenerate} />
-                ) : (
-                    <div className="animate-fade-in mt-10 flex flex-col items-center w-full">
-                        <div className="flex w-full justify-between items-center mb-6 max-w-6xl">
-                            <button
-                                onClick={() => setChartData(null)}
-                                className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-full transition-colors text-sm"
-                            >
-                                ← 返回輸入 (Back)
-                            </button>
 
-                            {/* Tabs for Prediction Mode */}
-                            {(chartData.liuNianIndex !== undefined) && (
-                                <div className="flex bg-slate-800 rounded-lg p-1 border border-slate-700">
-                                    {(['birth', 'year', 'month'] as const).map((mode) => (
-                                        <button
-                                            key={mode}
-                                            onClick={() => setActiveTab(mode)}
-                                            className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${activeTab === mode
-                                                ? 'bg-purple-600 text-white shadow-md'
-                                                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'
-                                                }`}
-                                        >
-                                            {mode === 'birth' && '本命盤 (Birth)'}
-                                            {mode === 'year' && '流年盤 (Year)'}
-                                            {mode === 'month' && '流月盤 (Month)'}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
+                    {/* View Mode Switching Controls - Sticky Logic or just below input */}
+                    {chartData && chartData.liuNianIndex !== undefined && (
+                        <div className="mt-4 pt-4 border-t border-slate-800 animate-fade-in">
+                            <p className="text-sm text-slate-400 mb-2 font-bold">顯示模式</p>
+                            <div className="grid grid-cols-2 gap-2">
+                                {(['birth', 'year', 'month', 'stacked'] as const).map((mode) => (
+                                    <button
+                                        key={mode}
+                                        onClick={() => setActiveTab(mode)}
+                                        className={`py-2 px-3 rounded text-sm font-bold transition-all border ${activeTab === mode
+                                            ? 'bg-purple-600 text-white border-purple-500 shadow-md transform scale-[1.02]'
+                                            : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200 hover:bg-slate-700'
+                                            }`}
+                                    >
+                                        {mode === 'birth' && '本命盤'}
+                                        {mode === 'year' && '流年盤'}
+                                        {mode === 'month' && '流月盤'}
+                                        {mode === 'stacked' && '疊盤'}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
+                    )}
+                </aside>
 
-                        <ChartGrid chart={chartData} displayMode={activeTab} />
-                    </div>
-                )}
+                {/* Mobile Input Toggle (Visible only on small screens) */}
+                {/* Note: In a real app we'd add a toggle, effectively standard layout acts as sidebar on desktop */}
+
+                {/* Right Area: Chart */}
+                <main className="flex-1 overflow-auto bg-slate-950 p-2 md:p-4 flex flex-col items-center">
+                    {!chartData ? (
+                        <div className="flex flex-col items-center justify-center h-full text-slate-500 opacity-50">
+                            <div className="text-6xl mb-4">🔮</div>
+                            <p>請在左側輸入資料並點擊排盤</p>
+                            <div className="md:hidden mt-4">
+                                <InputForm onSubmit={handleGenerate} />
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="w-full max-w-[95%] animate-fade-in">
+                            <ChartGrid
+                                chart={chartData}
+                                displayMode={activeTab}
+                            />
+                        </div>
+                    )}
+                </main>
             </div>
-
-            <footer className="w-full text-center p-4 text-slate-600 text-[14px] mt-8 border-t border-slate-800">
-                v3.3 專業版 (Prediction Si Hua & Info) | ZWDS App
-            </footer>
         </div>
     );
 }

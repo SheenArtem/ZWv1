@@ -14,7 +14,7 @@ import { calculateSiHua } from './calculators/SiHuaCalculator';
 import { calculatelimits, calculateAgesInPalace } from './calculators/LimitCalculator';
 import { HEAVENLY_STEMS, EARTHLY_BRANCHES, ZWDS_PALACE_NAMES } from './constants';
 import LunarJS from 'lunar-javascript';
-const { Solar } = LunarJS;
+const { Solar, Lunar } = LunarJS;
 
 // Masters Logic
 const getMingZhu = (mingPadIndex: number): string => {
@@ -28,16 +28,33 @@ const getShenZhu = (yearBranchIndex: number): string => {
 };
 
 // Helper: Format Si Hua Map to String
-const formatSiHua = (map: Record<string, string>): string | undefined => {
-    const entries = Object.entries(map);
-    if (entries.length === 0) {
-        return undefined;
-    }
-    const result = entries.map(([star, type]) => {
-        const typeChar = { 'Lu': '祿', 'Quan': '權', 'Ke': '科', 'Ji': '忌' }[type];
-        return `${typeChar}: ${star}`;
-    }).join('  ');
-    return result || undefined;
+const formatSiHua = (map: Record<string, 'Lu' | 'Quan' | 'Ke' | 'Ji'>): string | undefined => {
+    // Invert to find Star by Type
+    const typeToStar: Record<string, string> = {};
+    Object.entries(map).forEach(([star, type]) => {
+        typeToStar[type] = star;
+    });
+
+    const lu = typeToStar['Lu'];
+    const quan = typeToStar['Quan'];
+    const ke = typeToStar['Ke'];
+    const ji = typeToStar['Ji'];
+
+    if (!lu && !quan && !ke && !ji) return undefined;
+
+    // Line 1: Lu, Quan
+    const line1 = [
+        lu ? `${lu}化祿` : '',
+        quan ? `${quan}化權` : ''
+    ].filter(Boolean).join('   ');
+
+    // Line 2: Ke, Ji
+    const line2 = [
+        ke ? `${ke}化科` : '',
+        ji ? `${ji}化忌` : ''
+    ].filter(Boolean).join('   ');
+
+    return [line1, line2].filter(Boolean).join('\n');
 };
 
 const GAN_CHARS = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
@@ -109,6 +126,8 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
     let predictionDisplayDate: string | undefined;
     let predictionLunarDate: string | undefined;
     let predictionGanZhi: string | undefined;
+    let liuNianDateRange: string | undefined;
+    let liuYueDateRange: string | undefined;
 
     if (predictionDate) {
         const pSolar = Solar.fromDate(predictionDate);
@@ -118,6 +137,28 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         predictionDisplayDate = `${pSolar.getYear()}年${pSolar.getMonth()}月${pSolar.getDay()}日`;
         predictionLunarDate = `${pLunar.getYearInGanZhi()}年 ${pLunar.getMonthInChinese()}月 ${pLunar.getDayInChinese()}日`;
         predictionGanZhi = `${pLunar.getYearInGanZhi()}年 ${pLunar.getMonthInGanZhi()}月 ${pLunar.getDayInGanZhi()}日`;
+
+        // Calculate Date Ranges
+        try {
+            // Liu Nian Range (Lunar Year Start to End)
+            const lnStart = Lunar.fromYmd(pLunar.getYear(), 1, 1).getSolar();
+            const lnEnd = Lunar.fromYmd(pLunar.getYear() + 1, 1, 1).next(-1).getSolar();
+            liuNianDateRange = `${lnStart.toYmd()} ~ ${lnEnd.toYmd()}`;
+
+            // Liu Yue Range (Lunar Month Start to End)
+            const pMonth = pLunar.getMonth();
+            const lyStart = Lunar.fromYmd(pLunar.getYear(), pMonth, 1);
+            const msgStart = lyStart.getSolar();
+            // Try to get days in month using API, default to 30 if failed to avoid crash
+            let daysInMonth = 30;
+            if (typeof lyStart.getDayInMonth === 'function') {
+                daysInMonth = lyStart.getDayInMonth();
+            }
+            const lyEnd = lyStart.next(daysInMonth - 1).getSolar();
+            liuYueDateRange = `${msgStart.toYmd()} ~ ${lyEnd.toYmd()}`;
+        } catch (e) {
+            console.error('Date Range Calc Error:', e);
+        }
 
         // Liu Nian
         const pYear = pLunar.getYear();
@@ -245,6 +286,8 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         // Prediction Info
         predictionDate: predictionDisplayDate,
         predictionLunarDate: predictionLunarDate,
-        predictionGanZhi: predictionGanZhi
+        predictionGanZhi: predictionGanZhi,
+        liuNianDateRange,
+        liuYueDateRange
     };
 };

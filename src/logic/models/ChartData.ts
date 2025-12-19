@@ -50,4 +50,6 @@ export interface ChartData {
     predictionDate?: string;
     predictionLunarDate?: string;
     predictionGanZhi?: string;
+    liuNianDateRange?: string;
+    liuYueDateRange?: string;
 }

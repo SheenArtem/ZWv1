@@ -7,17 +7,19 @@ interface PalaceCardProps {
     className?: string;
     isLiuNian?: boolean;
     isLiuYue?: boolean;
-    displayMode?: 'all' | 'birth' | 'year' | 'month';
+    displayMode?: 'all' | 'birth' | 'year' | 'month' | 'stacked';
+    yearPalaceName?: string;
+    monthPalaceName?: string;
 }
 
-export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, isLiuYue, displayMode = 'all' }) => {
+export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, isLiuYue, displayMode = 'all', yearPalaceName, monthPalaceName }) => {
     // Badges text-sm (14px)
     const renderMutagens = (star: Star) => {
         const badges = [];
         const charMap: Record<string, string> = { 'Lu': '祿', 'Quan': '權', 'Ke': '科', 'Ji': '忌' };
 
         // Birth
-        if (star.mutagen && (displayMode === 'all' || displayMode === 'birth')) {
+        if (star.mutagen && (displayMode === 'all' || displayMode === 'birth' || displayMode === 'stacked')) {
             const colorMap: Record<string, string> = {
                 'Lu': 'bg-emerald-600 border-emerald-400 text-white',
                 'Quan': 'bg-red-600 border-red-400 text-white',
@@ -32,18 +34,18 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
         }
 
         // Liu Nian
-        if (star.liuNianMutagen && (displayMode === 'all' || displayMode === 'year')) {
+        if (star.liuNianMutagen && (displayMode === 'all' || displayMode === 'year' || displayMode === 'stacked')) {
             badges.push(
-                <span key="liunian" className={clsx("ml-1 text-[12px] px-1 rounded border border-amber-500 bg-amber-900/80 text-amber-100 font-bold inline-block leading-tight transform scale-90")}>
+                <span key="liunian" className={clsx("ml-1 text-[14px] px-1 rounded border border-amber-500 bg-amber-900/80 text-amber-100 font-bold inline-block leading-tight")}>
                     流年 {charMap[star.liuNianMutagen]}
                 </span>
             );
         }
 
         // Liu Yue
-        if (star.liuYueMutagen && (displayMode === 'all' || displayMode === 'month')) {
+        if (star.liuYueMutagen && (displayMode === 'all' || displayMode === 'month' || displayMode === 'stacked')) {
             badges.push(
-                <span key="liuyue" className={clsx("ml-1 text-[12px] px-1 rounded border border-emerald-500 bg-emerald-900/80 text-emerald-100 font-bold inline-block leading-tight transform scale-90")}>
+                <span key="liuyue" className={clsx("ml-1 text-[14px] px-1 rounded border border-emerald-500 bg-emerald-900/80 text-emerald-100 font-bold inline-block leading-tight")}>
                     流月 {charMap[star.liuYueMutagen]}
                 </span>
             );
@@ -56,12 +58,12 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
         <div className="flex items-center gap-1 mb-0.5 flex-wrap">
             <span className={clsx(
                 "text-[16px] font-bold leading-tight",
-                ['紫微', '天府', '太陽', '太陰', '祿存'].includes(star.name) ? 'text-red-500' : 'text-purple-400'
+                'text-purple-400'
             )}>
                 {star.name}
             </span>
             {star.brightness && (
-                <span className="text-[14px] text-slate-400 font-normal leading-tight">
+                <span className="text-[14px] text-amber-300 font-normal leading-tight">
                     {star.brightness}
                 </span>
             )}
@@ -73,7 +75,7 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
         <div className="inline-block mr-2 mb-1">
             <span className={clsx(
                 "text-[14px] leading-tight",
-                star.type === 'bad' ? 'text-blue-400' : 'text-slate-300'
+                star.type === 'bad' ? 'text-blue-300' : 'text-slate-200'
             )}>
                 {star.name}
             </span>
@@ -91,10 +93,10 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
 
     return (
         <div className={clsx(
-            "relative bg-slate-9 border border-slate-700 p-1 flex flex-col h-56 sm:h-64 overflow-hidden bg-slate-800 hover:z-50 hover:overflow-visible hover:h-auto hover:shadow-2xl transition-all duration-200",
+            "p-1 flex flex-col hover:bg-slate-800 transition-colors duration-200 bg-slate-950",
             className,
-            isLiuNian && "ring-2 ring-inset ring-amber-500",
-            isLiuYue && !isLiuNian && "ring-2 ring-inset ring-emerald-500"
+            isLiuNian && "ring-[2px] ring-inset ring-amber-500 z-10",
+            isLiuYue && !isLiuNian && "ring-[2px] ring-inset ring-emerald-500 z-10"
         )}>
             {isLiuNian && (displayMode === 'all' || displayMode === 'year') && (
                 <div className="absolute top-0 right-0 bg-amber-600 text-[14px] px-1 text-white font-bold opacity-full z-20">
@@ -121,13 +123,13 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
             <div className="absolute bottom-0 w-full flex flex-col px-1 pb-1 bg-gradient-to-t from-slate-900 via-slate-900 to-transparent pt-8">
                 <div className="flex justify-between text-[14px] mb-1">
                     <div className="flex flex-wrap">
-                        <GodItem name={data.gods.changSheng} color="text-amber-600" />
-                        <GodItem name={data.gods.boShi} color="text-slate-500" />
-                        <GodItem name={data.gods.suiJian} color="text-slate-500" />
+                        <GodItem name={data.gods.changSheng} color="text-amber-400" />
+                        <GodItem name={data.gods.boShi} color="text-slate-300" />
+                        <GodItem name={data.gods.suiJian} color="text-slate-300" />
                     </div>
                 </div>
 
-                <div className="text-[14px] text-slate-500 font-mono leading-tight h-auto min-h-[1.2em] overflow-hidden text-center whitespace-normal break-words opacity-70 mb-1">
+                <div className="text-[14px] text-sky-300 font-mono leading-tight h-auto min-h-[1.2em] overflow-hidden text-center whitespace-normal break-words mb-1">
                     {data.xiaoXian}
                 </div>
 
@@ -135,10 +137,28 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
                     <span className="text-[16px] font-bold text-amber-500 font-mono leading-none">
                         {data.daXian}
                     </span>
-                    <span className="text-[18px] font-bold text-red-500 leading-none">
-                        {data.palaceName}
-                    </span>
-                    <span className="text-[14px] text-slate-400 font-mono leading-none">
+                    {displayMode === 'stacked' ? (
+                        <div className="flex flex-col items-end">
+                            <span className="text-[14px] text-red-500 font-bold leading-none mb-0.5 opacity-60">
+                                {data.palaceName === '身宮' ? '身宮' : `${data.palaceName}`}
+                            </span>
+                            {yearPalaceName && (
+                                <span className="text-[14px] text-amber-500 font-bold leading-none mb-0.5">
+                                    {yearPalaceName}
+                                </span>
+                            )}
+                            {monthPalaceName && (
+                                <span className="text-[14px] text-emerald-500 font-bold leading-none">
+                                    {monthPalaceName}
+                                </span>
+                            )}
+                        </div>
+                    ) : (
+                        <span className="text-[18px] font-bold text-red-500 leading-none">
+                            {data.palaceName}
+                        </span>
+                    )}
+                    <span className="text-[14px] text-amber-300 font-mono leading-none">
                         {data.stemName}{data.branchName}
                     </span>
                 </div>
