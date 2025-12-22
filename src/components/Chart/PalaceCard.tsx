@@ -7,18 +7,19 @@ interface PalaceCardProps {
     className?: string;
     isLiuNian?: boolean;
     isLiuYue?: boolean;
-    displayMode?: 'all' | 'birth' | 'year' | 'month' | 'stacked';
+    displayMode?: 'all' | 'birth' | 'year' | 'month' | 'decade';
     yearPalaceName?: string;
     monthPalaceName?: string;
+    decadePalaceName?: string;
 }
 
-export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, isLiuYue, displayMode = 'all', yearPalaceName, monthPalaceName }) => {
+export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, isLiuYue, displayMode = 'all', yearPalaceName, monthPalaceName, decadePalaceName }) => {
     // Badges text-sm (14px)
     const renderMutagens = (star: Star) => {
         const badges = [];
         const charMap: Record<string, string> = { 'Lu': '祿', 'Quan': '權', 'Ke': '科', 'Ji': '忌' };
 
-        // Birth (Always Show, Red Background, White Text, format: "生年 權")
+        // Birth (Always Show, Red Background, White Text)
         if (star.mutagen) {
             badges.push(
                 <span key="birth" className={clsx("ml-1 text-[16px] px-1 rounded border font-bold inline-block leading-tight bg-red-600 border-red-400 text-white")}>
@@ -28,7 +29,7 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
         }
 
         // Liu Nian
-        if (star.liuNianMutagen && (displayMode === 'all' || displayMode === 'year' || displayMode === 'stacked')) {
+        if (star.liuNianMutagen && (displayMode === 'all' || displayMode === 'year' || displayMode === 'month')) {
             badges.push(
                 <span key="liunian" className={clsx("ml-1 text-[16px] px-1 rounded border border-amber-500 bg-amber-900/80 text-amber-100 font-bold inline-block leading-tight")}>
                     流年 {charMap[star.liuNianMutagen]}
@@ -37,10 +38,19 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
         }
 
         // Liu Yue
-        if (star.liuYueMutagen && (displayMode === 'all' || displayMode === 'month' || displayMode === 'stacked')) {
+        if (star.liuYueMutagen && (displayMode === 'all' || displayMode === 'month')) {
             badges.push(
                 <span key="liuyue" className={clsx("ml-1 text-[16px] px-1 rounded border border-emerald-500 bg-emerald-900/80 text-emerald-100 font-bold inline-block leading-tight")}>
                     流月 {charMap[star.liuYueMutagen]}
+                </span>
+            );
+        }
+
+        // Da Xian
+        if (star.daXianMutagen && (displayMode === 'all' || displayMode === 'decade' || displayMode === 'year' || displayMode === 'month')) {
+            badges.push(
+                <span key="daxian" className={clsx("ml-1 text-[16px] px-1 rounded border border-indigo-500 bg-indigo-900/80 text-indigo-100 font-bold inline-block leading-tight")}>
+                    大限 {charMap[star.daXianMutagen]}
                 </span>
             );
         }
@@ -93,6 +103,7 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
             isLiuNian && "ring-[2px] ring-inset ring-amber-500 z-10",
             isLiuYue && !isLiuNian && "ring-[2px] ring-inset ring-emerald-500 z-10"
         )}>
+            {/* Corner Badges */}
             {isLiuNian && (displayMode === 'all' || displayMode === 'year') && (
                 <div className="absolute top-0 right-0 bg-amber-600 text-[16px] px-1 text-white font-bold opacity-full z-20">
                     流年
@@ -101,6 +112,11 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
             {isLiuYue && (displayMode === 'all' || displayMode === 'month') && (
                 <div className="absolute top-0 right-12 bg-emerald-600 text-[16px] px-1 text-white font-bold opacity-full z-20">
                     流月
+                </div>
+            )}
+            {(displayMode === 'decade' && decadePalaceName === '命宮') && (
+                <div className="absolute top-0 right-0 bg-indigo-600 text-[16px] px-1 text-white font-bold opacity-full z-20">
+                    大限
                 </div>
             )}
 
@@ -137,27 +153,70 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
                     <span className="text-[16px] font-bold text-amber-500 font-mono leading-tight">
                         {data.daXian}
                     </span>
-                    {displayMode === 'stacked' ? (
-                        <div className="flex flex-col items-end">
-                            <span className="text-[16px] text-red-500 font-bold leading-tight mb-0.5 opacity-60">
-                                {data.palaceName === '身宮' ? '身宮' : `${data.palaceName}`}
+
+                    {/* Render Title Stack */}
+                    <div className="flex flex-col items-center">
+
+                        {/* Month View: Decade + Year + Month */}
+                        {displayMode === 'month' && (
+                            <>
+                                {decadePalaceName && (
+                                    <span className="text-[16px] text-indigo-400 font-bold leading-tight mb-0.5 opacity-80">
+                                        {decadePalaceName}
+                                    </span>
+                                )}
+                                {yearPalaceName && (
+                                    <span className="text-[16px] text-amber-500 font-bold leading-tight mb-0.5 opacity-90">
+                                        {yearPalaceName}
+                                    </span>
+                                )}
+                                {monthPalaceName ? (
+                                    <span className="text-[18px] text-emerald-400 font-bold leading-tight">
+                                        {monthPalaceName}
+                                    </span>
+                                ) : (
+                                    <span className="text-[18px] text-slate-500 font-bold leading-tight">-</span>
+                                )}
+                            </>
+                        )}
+
+                        {/* Year View: Birth + Decade + Year */}
+                        {displayMode === 'year' && (
+                            <>
+                                <span className="text-[16px] text-red-500 font-bold leading-tight mb-0.5 opacity-60">
+                                    {data.palaceName}
+                                </span>
+                                {decadePalaceName && (
+                                    <span className="text-[16px] text-indigo-400 font-bold leading-tight mb-0.5 opacity-80">
+                                        {decadePalaceName}
+                                    </span>
+                                )}
+                                {yearPalaceName ? (
+                                    <span className="text-[18px] text-amber-500 font-bold leading-tight">
+                                        {yearPalaceName}
+                                    </span>
+                                ) : (
+                                    <span className="text-[18px] text-slate-500 font-bold leading-tight">-</span>
+                                )}
+                            </>
+                        )}
+
+                        {/* Decade View: Decade Only (or Rotated) */}
+                        {displayMode === 'decade' && (
+                            <span className="text-[18px] font-bold text-indigo-400 leading-tight">
+                                {decadePalaceName || data.palaceName}
                             </span>
-                            {yearPalaceName && (
-                                <span className="text-[16px] text-amber-500 font-bold leading-tight mb-0.5">
-                                    {yearPalaceName}
-                                </span>
-                            )}
-                            {monthPalaceName && (
-                                <span className="text-[16px] text-emerald-500 font-bold leading-tight">
-                                    {monthPalaceName}
-                                </span>
-                            )}
-                        </div>
-                    ) : (
-                        <span className="text-[18px] font-bold text-red-500 leading-tight">
-                            {data.palaceName}
-                        </span>
-                    )}
+                        )}
+
+                        {/* Birth View / Default */}
+                        {(displayMode === 'birth' || displayMode === 'all') && (
+                            <span className="text-[18px] font-bold text-red-500 leading-tight">
+                                {data.palaceName}
+                            </span>
+                        )}
+
+                    </div>
+
                     <span className="text-[16px] text-amber-300 font-mono leading-tight">
                         {data.stemName}{data.branchName}
                     </span>

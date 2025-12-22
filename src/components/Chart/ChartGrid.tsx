@@ -4,44 +4,49 @@ import { PalaceCard } from './PalaceCard';
 
 interface ChartGridProps {
     chart: ChartData;
-    displayMode?: 'all' | 'birth' | 'year' | 'month' | 'stacked';
+    displayMode?: 'all' | 'birth' | 'year' | 'month' | 'decade';
 }
 
 export const ChartGrid: FC<ChartGridProps> = ({ chart, displayMode = 'all' }) => {
+    // No local state - controlled by parent
+
     const getPalaceElement = (branchIndex: number) => {
         const p = chart.palaces.find(p => p.branchIndex === branchIndex)!;
         const isLiuNian = chart.liuNianIndex === branchIndex;
         const isLiuYue = chart.liuYueIndex === branchIndex;
 
-        // Calculate Stacked Layer Names
+        // Calculate Stacked / Dynamic Layer Names
         let yearPalaceName: string | undefined;
         let monthPalaceName: string | undefined;
+        let decadePalaceName: string | undefined;
 
-        if (displayMode === 'stacked' && chart.liuNianIndex !== undefined) {
-            // Logic:
-            // The standard sequence of palaces is:
-            // Limit, Siblings, Spouse, Children, Wealth, Health, Travel, Friends, Career, Property, Mental, Parents
-            // 0      1         2       3         4       5       6       7        8       9         10      11
+        const palaceNames = ['命宮', '兄弟', '夫妻', '子女', '財帛', '疾厄', '遷移', '交友', '官祿', '田宅', '福德', '父母'];
 
-            // To find what "Year Palace" is at this branchIndex:
-            // 1. Calculate the offset from the Year Life Palace (liuNianIndex).
-            //    offset = (branchIndex - liuNianIndex + 12) % 12; // Clockwise? No, palaces are Counter-Clockwise usually? 
-            //    Wait, usually Palace placement logic: Life at X, Siblings at X-1 (CCW) or X+1 (CW)?
-            //    Let's check ChartBuilder.ts logic if needed. 
-            //    Usually: Life, Siblings (CCW 1), Spouse (CCW 2)...
-            //    So index = (LifeIndex - SequenceIndex + 12) % 12.
+        // 1. Decade Name (Used in Decade, Year, and Month views)
+        if (['decade', 'year', 'month'].includes(displayMode as string)) {
+            if (chart.daXianIndex !== undefined) {
+                // For Decade View: We might rotate? 
+                // Current logic: If 'decade', we rotate the grid labels in PalaceCard? 
+                // Or we rotate the GRID here?
+                // User request for Year/Month is "Stacked" (Overlay).
+                // Decade View was previously "Rotated".
+                // Let's keep Decade View simple (Prop passes name, PalaceCard decides display).
 
-            //    Here we have the branchIndex. We want to know which SequenceIndex corresponds to it relative to liuNianIndex.
-            //    branchIndex = (liuNianIndex - Seq + 12) % 12
-            //    => Seq = (liuNianIndex - branchIndex + 12) % 12
+                const decadeSeq = (chart.daXianIndex - branchIndex + 12) % 12;
+                decadePalaceName = (decadeSeq >= 0 && decadeSeq < 12) ? `大限${palaceNames[decadeSeq]}` : undefined;
+            }
+        }
 
-            const palaceNames = ['命宮', '兄弟', '夫妻', '子女', '財帛', '疾厄', '遷移', '交友', '官祿', '田宅', '福德', '父母'];
+        // 2. Year Name (Used in Year and Month views)
+        if (['year', 'month'].includes(displayMode as string)) {
+            if (chart.liuNianIndex !== undefined) {
+                const yearSeq = (chart.liuNianIndex - branchIndex + 12) % 12;
+                yearPalaceName = (yearSeq >= 0 && yearSeq < 12) ? `流年${palaceNames[yearSeq]}` : undefined;
+            }
+        }
 
-            // Year Palace Name
-            const yearSeq = (chart.liuNianIndex - branchIndex + 12) % 12;
-            yearPalaceName = (yearSeq >= 0 && yearSeq < 12) ? `流年${palaceNames[yearSeq]}` : undefined;
-
-            // Month Palace Name
+        // 3. Month Name (Used in Month view)
+        if (displayMode === 'month' as any) {
             if (chart.liuYueIndex !== undefined) {
                 const monthSeq = (chart.liuYueIndex - branchIndex + 12) % 12;
                 monthPalaceName = (monthSeq >= 0 && monthSeq < 12) ? `流月${palaceNames[monthSeq]}` : undefined;
@@ -54,9 +59,10 @@ export const ChartGrid: FC<ChartGridProps> = ({ chart, displayMode = 'all' }) =>
                     data={p}
                     isLiuNian={isLiuNian}
                     isLiuYue={isLiuYue}
-                    displayMode={displayMode}
+                    displayMode={displayMode as any}
                     yearPalaceName={yearPalaceName}
                     monthPalaceName={monthPalaceName}
+                    decadePalaceName={decadePalaceName}
                     className="absolute inset-0 w-full h-full z-10 overflow-hidden"
                 />
             </div>
@@ -64,11 +70,10 @@ export const ChartGrid: FC<ChartGridProps> = ({ chart, displayMode = 'all' }) =>
 
     };
 
-    // Rename to Component style for clarity in Usage
     const PalaceWrapper = ({ branchIndex }: { branchIndex: number }) => getPalaceElement(branchIndex);
 
     const CenterInfo = () => (
-        <div className="col-span-2 row-span-2 bg-slate-900 flex flex-col items-center justify-center border border-slate-700 p-2 overflow-y-auto">
+        <div className="col-span-2 row-span-2 bg-slate-900 flex flex-col items-center justify-center border border-slate-700 p-2 overflow-y-auto relative group">
             <h3 className="text-3xl font-bold text-amber-500 mb-2">紫微斗數</h3>
             <div className="text-slate-300 text-sm space-y-2 text-center font-medium w-full">
 
@@ -99,9 +104,7 @@ export const ChartGrid: FC<ChartGridProps> = ({ chart, displayMode = 'all' }) =>
                     </div>
                 </div>
 
-
-
-                {/* Prediction Info Block - Only show if prediction is active */}
+                {/* Prediction Info Block */}
                 {chart.predictionDate && (
                     <div className="bg-indigo-900/30 p-2 rounded mb-2 border border-indigo-500/30 text-center">
                         <p className="text-indigo-300 font-bold mb-1 text-lg">運勢預測</p>
@@ -113,15 +116,16 @@ export const ChartGrid: FC<ChartGridProps> = ({ chart, displayMode = 'all' }) =>
 
                         {/* Date Ranges */}
                         <div className="text-lg text-slate-300 space-y-0.5 border-t border-indigo-500/20 pt-1 font-bold">
+                            {chart.daXianDateRange && <p className="text-indigo-400">大限: {chart.daXianDateRange}</p>}
                             {chart.liuNianDateRange && <p>流年: {chart.liuNianDateRange}</p>}
                             {chart.liuYueDateRange && <p>流月: {chart.liuYueDateRange}</p>}
                         </div>
                     </div>
                 )}
 
-                {/* Si Hua Summaries - Horizontal Grid to save height */}
+                {/* Si Hua Summaries */}
                 <div className="flex flex-wrap justify-center gap-2 mt-2 w-full px-2">
-                    {/* Birth Si Hua (Always Visible) */}
+                    {/* Birth Si Hua */}
                     {chart.siHuaSummary && (
                         <div className="p-1.5 bg-slate-800 rounded border border-slate-600 shadow-sm flex flex-col justify-center min-w-[120px]">
                             <p className="text-sm text-slate-400 font-bold mb-0.5 text-center">生年四化</p>
@@ -129,8 +133,16 @@ export const ChartGrid: FC<ChartGridProps> = ({ chart, displayMode = 'all' }) =>
                         </div>
                     )}
 
+                    {/* Da Xian Si Hua */}
+                    {chart.daXianSiHuaSummary && (displayMode === 'all' || displayMode === 'decade' as any || displayMode === 'year' as any || displayMode === 'month' as any) && (
+                        <div className="p-1.5 bg-slate-800 rounded border border-indigo-900/50 shadow-sm flex flex-col justify-center min-w-[120px]">
+                            <p className="text-sm text-indigo-400 font-bold mb-0.5 text-center">大限四化</p>
+                            <p className="text-indigo-300 text-lg font-bold tracking-wide text-center leading-tight whitespace-pre-wrap">{chart.daXianSiHuaSummary}</p>
+                        </div>
+                    )}
+
                     {/* Liu Nian Si Hua */}
-                    {chart.liuNianSiHuaSummary && (displayMode === 'all' || displayMode === 'year' || displayMode === 'stacked') && (
+                    {chart.liuNianSiHuaSummary && (displayMode === 'all' || displayMode === 'year' as any || displayMode === 'month' as any) && (
                         <div className="p-1.5 bg-slate-800 rounded border border-amber-900/50 shadow-sm flex flex-col justify-center min-w-[120px]">
                             <p className="text-sm text-amber-600 font-bold mb-0.5 text-center">流年四化</p>
                             <p className="text-amber-400 text-lg font-bold tracking-wide text-center leading-tight whitespace-pre-wrap">{chart.liuNianSiHuaSummary}</p>
@@ -138,15 +150,13 @@ export const ChartGrid: FC<ChartGridProps> = ({ chart, displayMode = 'all' }) =>
                     )}
 
                     {/* Liu Yue Si Hua */}
-                    {chart.liuYueSiHuaSummary && (displayMode === 'all' || displayMode === 'month' || displayMode === 'stacked') && (
+                    {chart.liuYueSiHuaSummary && (displayMode === 'all' || displayMode === 'month') && (
                         <div className="p-1.5 bg-slate-800 rounded border border-emerald-900/50 shadow-sm flex flex-col justify-center min-w-[120px]">
                             <p className="text-sm text-emerald-600 font-bold mb-0.5 text-center">流月四化</p>
                             <p className="text-emerald-400 text-lg font-bold tracking-wide text-center leading-tight whitespace-pre-wrap">{chart.liuYueSiHuaSummary}</p>
                         </div>
                     )}
                 </div>
-
-
             </div>
         </div>
     );

@@ -1,0 +1,18 @@
+
+=== Analyzing Case: Input as Solar 1983-07-08 ===
+Life Palace: 亥 (11)
+Major Stars: [武曲, 破軍]
+Minor Stars: [陀羅, 文曲, 三台, 鳳閣, 天廚]
+Wealth (Mao?): undefined (undefined) - Major: undefined
+Career (Hai?): undefined (undefined) - Major: undefined
+Detected Formations: 
+
+Converted Lunar 1983-07-08 to Solar: 1983-8-16
+
+=== Analyzing Case: Input as Lunar 1983-07-08 ===
+Life Palace: 丑 (1)
+Major Stars: [天府]
+Minor Stars: [擎羊, 飛廉, 截空, 台輔, 旬空]
+Wealth (Mao?): undefined (undefined) - Major: undefined
+Career (Hai?): undefined (undefined) - Major: undefined
+Detected Formations: 【特殊格局】: 天府朝垣格, 府相朝垣格

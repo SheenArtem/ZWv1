@@ -8,6 +8,7 @@ export interface Star {
     mutagen?: StarMutagen; // Si Hua (Birth)
     liuNianMutagen?: StarMutagen; // Si Hua (Liu Nian)
     liuYueMutagen?: StarMutagen; // Si Hua (Liu Yue)
+    daXianMutagen?: StarMutagen; // Si Hua (Da Xian)
 }
 
 export interface TwelveGods {
@@ -40,6 +41,8 @@ export interface ChartData {
     siHuaSummary?: string;      // Birth Year Si Hua
     liuNianSiHuaSummary?: string; // Prediction Year Si Hua
     liuYueSiHuaSummary?: string;  // Prediction Month Si Hua
+    daXianSiHuaSummary?: string;  // Decade Si Hua
+    daXianIndex?: number;         // Decade Life Palace Index
 
     // Display Info
     birthDate?: string;
@@ -56,4 +59,5 @@ export interface ChartData {
     predictionGanZhi?: string;
     liuNianDateRange?: string;
     liuYueDateRange?: string;
+    daXianDateRange?: string;
 }

@@ -215,6 +215,76 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         }
     }
 
+    // Da Xian (Decade) Logic
+    let daXianIndex: number | undefined;
+    let dxSiHuaMap: Record<string, string> = {};
+    let daXianSiHuaSummary: string | undefined;
+    let daXianDateRange: string | undefined;
+
+    if (predictionDate) {
+        // 1. Calculate Current Age (Virtual Age / Sui Ci)
+        // Simple approximation: Prediction Year - Birth Year + 1
+        const pYear = Solar.fromDate(predictionDate).getYear();
+        const currentAge = pYear - input.year + 1;
+        daXianDateRange = `Age ${currentAge}`; // Display Age for now
+
+        // 2. Find which Palace covers this Age
+        // We need to check the limits of each palace.
+        // calculatelimits returns a closure.
+        const limitHelper = calculatelimits(mingIndex, bureauNum, input.gender, yearGanIndex);
+
+        for (let i = 0; i < 12; i++) {
+            const limit = limitHelper.getLimits(i);
+            const [start, end] = limit.daXian.split(' - ').map(Number);
+            if (currentAge >= start && currentAge <= end) {
+                daXianIndex = i;
+                break;
+            }
+        }
+
+        // 3. Calculate Decade Si Hua
+        if (daXianIndex !== undefined) {
+            // Get the Heaven Stem of the Decade Palace
+            // Note: Heavenly Stems for palaces are calculated using Five Tiget Magic (Wu Hu Dun)
+            // We need to recalculate or access the assigned stem.
+            // Fortunately, `palaces` array isn't built yet.
+            // But we can calculate the stem for this index indices.
+            // Wu Hu Dun: Year Stem -> Tiger(2) Stem.
+            // Stem for Index = (StartStem + (Index - 2)) % 10.
+            // Formula: 
+            // Year Gan (0=Jia) -> Tiger Stem?
+            // Jia/Ji -> Bing (2) Tiger
+            // Yi/Geng -> Wu (4) Tiger
+            // Bing/Xin -> Geng (6) Tiger
+            // Ding/Ren -> Ren (8) Tiger
+            // Wu/Gui -> Jia (0) Tiger
+            const startStemMap: Record<number, number> = {
+                0: 2, 5: 2, // Jia/Ji -> Bing(2)
+                1: 4, 6: 4, // Yi/Geng -> Wu(4)
+                2: 6, 7: 6, // Bing/Xin -> Geng(6)
+                3: 8, 8: 8, // Ding/Ren -> Ren(8)
+                4: 0, 9: 0  // Wu/Gui -> Jia(0)
+            };
+            const tigerStem = startStemMap[yearGanIndex % 5];
+            // Index is 0-11 (Zi-Hai). Tiger is 2.
+            // If Index < 2, add 12 to normalize rotation from Tiger?
+            // No, standard sequence: Tiger(2) has tigerStem.
+            // Mao(3) has tigerStem+1.
+            // ...
+            // Index X: Offset from 2? (X - 2).
+            // If X=0 (Zi), it is 10 steps from Tiger? Or 10 steps forward?
+            // Sequence: 2,3,4...11,0,1.
+            // Steps from 2: (Index - 2 + 12) % 12.
+            const stemOffset = (daXianIndex - 2 + 12) % 12;
+            const decadeStem = (tigerStem + stemOffset) % 10;
+
+            try {
+                dxSiHuaMap = calculateSiHua(decadeStem);
+                daXianSiHuaSummary = formatSiHua(dxSiHuaMap);
+            } catch (e) { console.error(e); }
+        }
+    }
+
     // 8. Assemble
     const palaces: PalaceData[] = [];
     const mingZhu = getMingZhu(mingIndex);
@@ -272,7 +342,8 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
                     brightness: getBrightness(starName, b),
                     mutagen: siHuaMap[starName],
                     liuNianMutagen: lnSiHuaMap[starName],
-                    liuYueMutagen: lySiHuaMap[starName]
+                    liuYueMutagen: lySiHuaMap[starName],
+                    daXianMutagen: dxSiHuaMap[starName] as any
                 });
             }
         }
@@ -288,7 +359,8 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
                     brightness: getBrightness(starName, b), // Mod: Fetch Brightness
                     mutagen: siHuaMap[starName],
                     liuNianMutagen: lnSiHuaMap[starName],
-                    liuYueMutagen: lySiHuaMap[starName]
+                    liuYueMutagen: lySiHuaMap[starName],
+                    daXianMutagen: dxSiHuaMap[starName] as any
                 });
             }
         }
@@ -303,7 +375,8 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
                     type: 'aux',
                     mutagen: siHuaMap[starName], // Use original key for mutagens if any (none usually for Aux)
                     liuNianMutagen: lnSiHuaMap[starName],
-                    liuYueMutagen: lySiHuaMap[starName]
+                    liuYueMutagen: lySiHuaMap[starName],
+                    daXianMutagen: dxSiHuaMap[starName] as any
                 });
             }
         }
@@ -344,6 +417,8 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         siHuaSummary,
         liuNianSiHuaSummary,
         liuYueSiHuaSummary,
+        daXianSiHuaSummary,
+        daXianIndex,
 
         // Display Info
         birthDate: `${input.year}年${input.month}月${input.day}日 ${input.hour}時`,
@@ -358,6 +433,7 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         predictionLunarDate: predictionLunarDate,
         predictionGanZhi: predictionGanZhi,
         liuNianDateRange,
-        liuYueDateRange
+        liuYueDateRange,
+        daXianDateRange
     };
 };

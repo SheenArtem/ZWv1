@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { InputForm } from './components/InputForm';
 import { ChartGrid } from './components/Chart/ChartGrid';
+import { AnalysisView } from './components/AnalysisView';
 import { BirthDetails } from './logic/models/BirthDetails';
 import { ChartData } from './logic/models/ChartData';
 import { generateChart } from './logic/ChartBuilder';
 
 function App() {
     const [chartData, setChartData] = useState<ChartData | null>(null);
-    const [activeTab, setActiveTab] = useState<'birth' | 'year' | 'month' | 'stacked'>('birth');
+    const [activeTab, setActiveTab] = useState<'birth' | 'decade' | 'year' | 'month' | 'analysis'>('birth');
 
     const handleGenerate = (details: BirthDetails, predictionDate?: Date) => {
         try {
@@ -36,7 +37,7 @@ function App() {
                         <div className="mt-4 pt-4 border-t border-slate-800 animate-fade-in">
                             <p className="text-sm text-slate-400 mb-2 font-bold">顯示模式</p>
                             <div className="grid grid-cols-2 gap-2">
-                                {(['birth', 'year', 'month', 'stacked'] as const).map((mode) => (
+                                {(['birth', 'decade', 'year', 'month', 'analysis'] as const).map((mode) => (
                                     <button
                                         key={mode}
                                         onClick={() => setActiveTab(mode)}
@@ -46,9 +47,10 @@ function App() {
                                             }`}
                                     >
                                         {mode === 'birth' && '本命盤'}
+                                        {mode === 'decade' && '大限盤'}
                                         {mode === 'year' && '流年盤'}
                                         {mode === 'month' && '流月盤'}
-                                        {mode === 'stacked' && '疊盤'}
+                                        {mode === 'analysis' && '論命分析'}
                                     </button>
                                 ))}
                             </div>
@@ -57,7 +59,7 @@ function App() {
 
                     <div className="mt-auto pt-4 pb-2 text-center opacity-80 hover:opacity-100 transition-opacity">
                         <h1 className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
-                            紫微斗數 v3.5.5
+                            紫微斗數 v4.0.0
                         </h1>
                     </div>
                 </aside>
@@ -77,10 +79,14 @@ function App() {
                         </div>
                     ) : (
                         <div className="w-full max-w-[95%] animate-fade-in">
-                            <ChartGrid
-                                chart={chartData}
-                                displayMode={activeTab}
-                            />
+                            {activeTab === 'analysis' ? (
+                                <AnalysisView chart={chartData} />
+                            ) : (
+                                <ChartGrid
+                                    chart={chartData}
+                                    displayMode={activeTab}
+                                />
+                            )}
                         </div>
                     )}
                 </main>
