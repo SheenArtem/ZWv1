@@ -94,7 +94,7 @@ function App() {
 
                     <div className="mt-auto pt-4 pb-2 text-center opacity-80 hover:opacity-100 transition-opacity">
                         <h1 className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
-                            紫微斗數 v4.0.0
+                            紫微斗數 v3.5.7
                         </h1>
                     </div>
                 </aside>
