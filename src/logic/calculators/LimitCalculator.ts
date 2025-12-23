@@ -75,9 +75,9 @@ export const calculateXiaoXianStartPalace = (yearZhiIndex: number): number => {
 
 export const calculateAgesInPalace = (
     palaceIndex: number, // 0-11
-    mingIndex: number,
+    _mingIndex: number,
     gender: 'Male' | 'Female',
-    yearStemIndex: number, // Unused for Xiao Xian direction, but kept for compatibility
+    _yearStemIndex: number, // Unused for Xiao Xian direction, but kept for compatibility
     yearZhiIndex: number
 ) => {
     // Traditional Xiao Xian Logic
