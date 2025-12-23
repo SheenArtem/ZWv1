@@ -10,6 +10,7 @@ export interface Star {
     liuYueMutagen?: StarMutagen; // Si Hua (Liu Yue)
     daXianMutagen?: StarMutagen; // Si Hua (Da Xian)
     description?: string; // New field for detailed analysis
+    scope?: 'origin' | 'decade' | 'year'; // Scope of the star (Birth, Limit, Annual)
 }
 
 export interface TwelveGods {
@@ -28,6 +29,8 @@ export interface PalaceData {
     majorStars: Star[];
     minorStars: Star[];
     gods: TwelveGods;
+    decadeGods?: TwelveGods; // Dynamic Override
+    yearGods?: TwelveGods; // Dynamic Override
     daXian: string;
     xiaoXian: number[] | string;
 }

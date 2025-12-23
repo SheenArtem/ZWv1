@@ -115,18 +115,50 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
         </div>
     );
 
-    const MinorStarItem = ({ star }: { star: Star }) => (
-        <div className="inline-flex items-center mb-0.5 mr-1 leading-none">
-            <span className={clsx(
-                "leading-none",
-                dynamicTextBase,
-                star.type === 'bad' ? 'text-blue-300' : 'text-slate-200'
-            )}>
-                {star.name}
-            </span>
-            {renderMutagens(star)}
-        </div>
-    );
+    const MinorStarItem = ({ star }: { star: Star }) => {
+        // HIDE Decade Stars if not in Prediction Mode (Decade/Year/Month)
+        // Basic Modes = 'birth', 'all'. Prediction Modes = 'decade', 'year', 'month'
+        const isPredictionMode = ['decade', 'year', 'month'].includes(displayMode || '');
+        if (star.scope === 'decade' && !isPredictionMode) {
+            return null;
+        }
+
+        // Color Logic
+        let textColor = 'text-slate-200'; // Fallback
+
+        if (star.type === 'bad') {
+            textColor = 'text-blue-300';
+        } else if (star.scope === 'decade') {
+            textColor = 'text-indigo-400';
+        } else {
+            // Basic/Birth Stars (Good/Aux/etc) -> Use Red-500 (Life Palace Color) per user request
+            // Note: User specifically asked for "Basic Lu Cun", but usually this implies the whole set or just Lu Cun? 
+            // "本命盤的祿存... 使用命宮的顏色" -> "Basic Chart's Lu Cun ... use Life Palace Color"
+            // Usually applies to the "Good" stars or specifically Lu Cun. 
+            // Let's check star name? Or apply to all non-bad basic stars?
+            // "Basic Lu Cun AND Doctor 12 Gods"
+            // If I apply to ALL minor stars, it might be too much red.
+            // But usually Lu Cun is treated as a Minor Star in this codebase list?
+            // Let's apply ONLY to '祿存' if scope is not decade?
+            // "Basic Chart's Lu Cun"
+            if (star.name === '祿存') {
+                textColor = 'text-red-500';
+            }
+        }
+
+        return (
+            <div className="inline-flex items-center mb-0.5 mr-1 leading-none">
+                <span className={clsx(
+                    "leading-none",
+                    dynamicTextBase,
+                    textColor
+                )}>
+                    {star.name}
+                </span>
+                {renderMutagens(star)}
+            </div>
+        );
+    };
 
     const GodItem = ({ name, color }: { name: string, color: string }) => {
         if (!name || name.trim() === '') return null;
@@ -173,7 +205,15 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
                 </div>
                 {/* Minor Stars (Right) */}
                 <div className="w-[60%] flex flex-row flex-wrap pt-3 pr-0.5 justify-end content-start gap-x-0.5 z-0 overflow-y-auto overflow-x-hidden scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-                    {data.minorStars.map(s => <MinorStarItem key={s.name} star={s} />)}
+                    {data.minorStars.map(s => {
+                        // Special Handling for Decade Lu Cun Name
+                        // If scope is decade, append (限)
+                        let displayName = s.name;
+                        if (s.scope === 'decade') {
+                            displayName = `${s.name}(限)`;
+                        }
+                        return <MinorStarItem key={s.name + (s.scope || '')} star={{ ...s, name: displayName }} />;
+                    })}
                 </div>
             </div>
 
@@ -183,14 +223,36 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
                 {/* Gods Row */}
                 <div className="flex justify-between mb-0.5">
                     <div className="flex flex-col leading-none">
-                        <div className="flex flex-wrap">
-                            <GodItem name={data.gods.changSheng} color="text-amber-400" />
-                            <GodItem name={data.gods.boShi} color="text-slate-300" />
-                        </div>
-                        <div className="flex flex-wrap mt-px">
-                            <GodItem name={data.gods.suiJian} color="text-slate-400" />
-                            <GodItem name={data.gods.jiangQian} color="text-slate-400" />
-                        </div>
+                        {/* Logic: If Decade/Year Mode, check for overrides */}
+                        {(() => {
+                            // Default: Birth
+                            let activeGods = data.gods;
+                            let boShiColor = "text-red-500"; // Default Birth Color (User Req: Life Palace Color)
+
+                            // If Decade Mode, try Decade Override (mainly Bo Shi)
+                            if (displayMode === 'decade' && data.decadeGods) {
+                                activeGods = data.decadeGods;
+                                boShiColor = "text-indigo-400"; // Decade Color
+                            }
+
+                            // Chang Sheng Color -> #FBBF24 (User Req)
+                            const changShengColor = "text-[#FBBF24]";
+
+                            return (
+                                <>
+                                    <div className="flex flex-wrap">
+                                        <GodItem name={activeGods.changSheng} color={changShengColor} />
+                                        <GodItem name={activeGods.boShi} color={boShiColor} />
+                                    </div>
+                                    {(displayMode === 'year' || displayMode === 'month') && (
+                                        <div className="flex flex-wrap mt-px">
+                                            <GodItem name={activeGods.suiJian} color="text-slate-400" />
+                                            <GodItem name={activeGods.jiangQian} color="text-slate-400" />
+                                        </div>
+                                    )}
+                                </>
+                            );
+                        })()}
                     </div>
                 </div>
 

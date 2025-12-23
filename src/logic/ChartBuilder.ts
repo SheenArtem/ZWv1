@@ -1,5 +1,5 @@
 import { BirthDetails } from './models/BirthDetails';
-import { ChartData, PalaceData, Star } from './models/ChartData';
+import { ChartData, PalaceData, Star, StarMutagen } from './models/ChartData';
 import { convertToLunar } from './converters/LunarConverter';
 import { calculatePalaces } from './calculators/PalaceCalculator';
 import { getPalaceStemIndices } from './calculators/SexagenaryCalculator';
@@ -28,7 +28,7 @@ const getShenZhu = (yearBranchIndex: number): string => {
 };
 
 // Helper: Format Si Hua Map to String
-const formatSiHua = (map: Record<string, 'Lu' | 'Quan' | 'Ke' | 'Ji'>): string | undefined => {
+const formatSiHua = (map: Record<string, StarMutagen>): string | undefined => {
     // Invert to find Star by Type
     const typeToStar: Record<string, string> = {};
     Object.entries(map).forEach(([star, type]) => {
@@ -140,8 +140,8 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
     let liuYueIndex: number | undefined;
     let liuNianSiHuaSummary: string | undefined;
     let liuYueSiHuaSummary: string | undefined;
-    let lnSiHuaMap: Record<string, any> = {};
-    let lySiHuaMap: Record<string, any> = {};
+    let lnSiHuaMap: Record<string, StarMutagen> = {};
+    let lySiHuaMap: Record<string, StarMutagen> = {};
 
     // Prediction Display Info
     let predictionDisplayDate: string | undefined;
@@ -217,7 +217,7 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
 
     // Da Xian (Decade) Logic
     let daXianIndex: number | undefined;
-    let dxSiHuaMap: Record<string, string> = {};
+    let dxSiHuaMap: Record<string, StarMutagen> = {};
     let daXianSiHuaSummary: string | undefined;
     let daXianDateRange: string | undefined;
 
@@ -282,6 +282,71 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
                 dxSiHuaMap = calculateSiHua(decadeStem);
                 daXianSiHuaSummary = formatSiHua(dxSiHuaMap);
             } catch (e) { console.error(e); }
+        }
+    }
+
+    // 8a. Prepare Gods Helpers
+    // We need a way to reuse calculateTwelveGods for Decade if possible, 
+    // OR just use internal logic since we only need Doctor 12 (Bo Shi).
+    // Doctor 12 depends on Lu Cun Position.
+
+    // Decade Logic Helpers (if Da Xian active)
+    let decadeGodsMap: Record<number, { boShi: string }> = {};
+    let decadeLuCunIndex = -1;
+
+    if (daXianIndex !== undefined && predictionDate) {
+        // Recalculate Decade Stem (Recover from loop above)
+        const startStemMap: Record<number, number> = {
+            0: 2, 5: 2, 1: 4, 6: 4, 2: 6, 7: 6, 3: 8, 8: 8, 4: 0, 9: 0
+        };
+        const tigerStem = startStemMap[yearGanIndex % 5];
+        const stemOffset = (daXianIndex - 2 + 12) % 12;
+        const decadeStem = (tigerStem + stemOffset) % 10;
+
+        // Calculate Decade Lu Cun Position (Same map as MinorStarCalculator)
+        // Jia(0)->Yin(2)...
+        const luCunMap = [2, 3, 5, 6, 5, 6, 8, 9, 11, 0];
+        decadeLuCunIndex = luCunMap[decadeStem];
+
+        // Calculate Decade Doctor 12 (Bo Shi)
+        // Direction: Yang Male/Yin Female = CW, Yin Male/Yang Female = CCW
+        // Check input.gender and decadeStem
+        const isYangStem = decadeStem % 2 === 0;
+        const isMale = input.gender === 'Male';
+        const isCW = (isYangStem && isMale) || (!isYangStem && !isMale);
+        // Wait, Direction for Bo Shi usually follows the same as Chang Sheng?
+        // TwelveGodsCalculator says: "isBoShiCW = isCW" (calculated from Year Gan usually).
+        // For Decade, do we use Decade Stem for direction? 
+        // Usually YES, everything relative to Decade uses Decade Stem.
+
+        // Calculate for all 12 palaces
+        // (Removed incorrect destructuring of BO_SHI_12)
+        // We can't import constants easily if they aren't exported.
+        // TwelveGodsCalculator.ts exports BO_SHI_12.
+        // Let's import it at top (add to imports later or assume available if exported).
+        // Actually, just inline the list or use the calculator if possible. 
+        // The calculator returns an object with a closure.
+        // Let's instantiate a calculator with Decade params?
+        // But `bureau` param in calc is for Chang Sheng. 
+        // We only need Bo Shi. Bo Shi depends on Lu Cun Index and Direction.
+        // Let's use the constants from the file if exported.
+        // They ARE exported.
+
+        // Import them first? We can't easily add imports in this chunk.
+        // We will assume BO_SHI_12 is available or duplicate it? 
+        // Duplication is safer for "Replace Block" to avoid import errors if I forget.
+        const BO_SHI_LIST = [
+            '博士', '力士', '青龍', '小耗(博)', '將軍', '奏書', '飛廉(博)', '喜神', '病符(博)', '大耗(博)', '伏兵', '官府'
+        ];
+
+        for (let i = 0; i < 12; i++) {
+            let bSteps = 0;
+            if (isCW) {
+                bSteps = (i - decadeLuCunIndex + 12) % 12;
+            } else {
+                bSteps = (decadeLuCunIndex - i + 12) % 12;
+            }
+            decadeGodsMap[i] = { boShi: BO_SHI_LIST[bSteps] };
         }
     }
 
@@ -384,7 +449,17 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         // const gods = godsCalc.getGods(b); // Moved logic out
         const gods = godsCalc.getGods(b);
         const limits = limitsCalc.getLimits(b);
-        const ages = calculateAgesInPalace(b, mingIndex, input.gender, yearGanIndex);
+        const ages = calculateAgesInPalace(b, mingIndex, input.gender, yearGanIndex, yearZhiIndex);
+
+        // Inject Decade Lu Cun if applicable
+        if (b === decadeLuCunIndex) {
+            cellMinorStars.push({
+                name: '祿存',
+                type: 'minor',
+                scope: 'decade', // Mark as Decade Star
+                brightness: '旺', // Lu Cun is always bright?
+            });
+        }
 
         palaces.push({
             branchIndex: b,
@@ -393,12 +468,17 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
             stemName: HEAVENLY_STEMS[stemIdx],
             palaceName: pName,
             majorStars: cellMajorStars,
-            minorStars: cellMinorStars, // includes Aux now
+            minorStars: cellMinorStars, // includes Aux and Decade now
             gods: {
                 ...gods,
                 suiJian: gods.jiangQian,  // User Ref "Sui Jian" = My Jiang Qian (Year Branch)
                 jiangQian: gods.suiJian   // User Ref "Jiang Qian" = My Sui Jian (Year Station)
             },
+            decadeGods: decadeGodsMap[b] ? {
+                ...gods, // Copy others (Chang Sheng etc)
+                boShi: decadeGodsMap[b].boShi, // Override Bo Shi
+                // Should we recalculate Chang Sheng for Decade? User didn't ask.
+            } : undefined,
             daXian: limits.daXian,
             xiaoXian: ages
         });

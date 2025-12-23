@@ -53,47 +53,56 @@ export const calculatelimits = (
     };
 };
 
+// Xiao Xian (Small Limit) Logic
+// 1. Start Palace based on Birth Year Branch (San He)
+//    - Yin/Wu/Xu (2,6,10) -> Chen (4)
+//    - Shen/Zi/Chen (8,0,4) -> Xu (10)
+//    - Si/You/Chou (5,9,1) -> Wei (7)
+//    - Hai/Mao/Wei (11,3,7) -> Chou (1)
+// 2. Direction: Male CW, Female CCW.
+// 3. Age 1 starts at Start Palace.
+
+export const calculateXiaoXianStartPalace = (yearZhiIndex: number): number => {
+    // Groupings
+    const map: Record<number, number> = {
+        2: 4, 6: 4, 10: 4, // Yin/Wu/Xu -> Chen
+        8: 10, 0: 10, 4: 10, // Shen/Zi/Chen -> Xu
+        5: 7, 9: 7, 1: 7, // Si/You/Chou -> Wei
+        11: 1, 3: 1, 7: 1 // Hai/Mao/Wei -> Chou
+    };
+    return map[yearZhiIndex] ?? 0;
+};
+
 export const calculateAgesInPalace = (
     palaceIndex: number, // 0-11
     mingIndex: number,
     gender: 'Male' | 'Female',
-    yearStemIndex: number
+    yearStemIndex: number, // Unused for Xiao Xian direction, but kept for compatibility
+    yearZhiIndex: number
 ) => {
-    // Usually charts show simple Age list like: 2, 14, 26... based on Da Xian?
-    // Or based on "Year Count" (Yi Sui) starting from Ming?
-    // Actually, traditionally:
-    // "Ming Palace" is Age 1.
-    // Directed by Yang Male/Yin Female CW, etc (Same as Da Xian).
-    // So if Ming is Zi. Age 1 @ Zi. Age 2 @ Next...
-    // Let's stick to this common display logic for the list "2 14 26...".
-
-    // BUT checking the user image:
-    // Palace "Fu De" (Happiness) shows "11 23 35...".
-    // Palace "Tian Zhai" (Property) shows "12 24 36...".
-    // This implies a sequence. 11->12 is adjacent.
-    // So it's just a sequence starting from somewhere.
-    // If Life (Ming) is 1.
-
-    // Let's assume standard sequence from Ming.
-    const isYangStem = yearStemIndex % 2 === 0;
+    // Traditional Xiao Xian Logic
+    const startPalace = calculateXiaoXianStartPalace(yearZhiIndex);
     const isMale = gender === 'Male';
-    const isCW = (isYangStem && isMale) || (!isYangStem && !isMale);
+    // Male CW, Female CCW
+    const isCW = isMale;
 
-    // Find "Step" of this palace from Ming
+    // Find steps from Start Palace to Current Palace
     let steps = 0;
     if (isCW) {
-        steps = (palaceIndex - mingIndex + 12) % 12;
+        steps = (palaceIndex - startPalace + 12) % 12;
     } else {
-        steps = (mingIndex - palaceIndex + 12) % 12;
+        steps = (startPalace - palaceIndex + 12) % 12;
     }
 
-    // Age 1 is at Ming. Age 1+steps is at Palace?
-    // Yes.
-    // So Ages: (1 + steps), (1 + steps + 12), ...
+    // Age 1 is at Start Palace.
+    // Age at Current = 1 + steps.
+    const startAge = 1 + steps;
 
     const ages = [];
     for (let k = 0; k < 8; k++) {
-        ages.push(1 + steps + (k * 12));
+        const age = startAge + (k * 12);
+        if (age > 120) break; // Reasonable cap
+        ages.push(age);
     }
     return ages.join(' ');
 };
