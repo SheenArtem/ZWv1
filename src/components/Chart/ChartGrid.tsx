@@ -1,13 +1,15 @@
 import { FC } from 'react';
-import { ChartData } from '../../logic/models/ChartData';
+import { ChartData, PalaceData } from '../../logic/models/ChartData';
 import { PalaceCard } from './PalaceCard';
 
 interface ChartGridProps {
     chart: ChartData;
     displayMode?: 'all' | 'birth' | 'year' | 'month' | 'decade';
+    onPalaceClick?: (palace: PalaceData) => void;
+    selectedPalaceId?: string;
 }
 
-export const ChartGrid: FC<ChartGridProps> = ({ chart, displayMode = 'all' }) => {
+export const ChartGrid: FC<ChartGridProps> = ({ chart, displayMode = 'all', onPalaceClick, selectedPalaceId }) => {
     // No local state - controlled by parent
 
     const getPalaceElement = (branchIndex: number) => {
@@ -64,6 +66,8 @@ export const ChartGrid: FC<ChartGridProps> = ({ chart, displayMode = 'all' }) =>
                     monthPalaceName={monthPalaceName}
                     decadePalaceName={decadePalaceName}
                     className="absolute inset-0 w-full h-full z-10 overflow-hidden"
+                    onClick={() => onPalaceClick?.(p)}
+                    isSelected={selectedPalaceId === p.palaceName}
                 />
             </div>
         );

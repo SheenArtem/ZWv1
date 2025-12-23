@@ -30,6 +30,7 @@ export interface StarRule {
         palace?: string; // e.g., "Life"
         brightness?: string[]; // e.g., ["Miao", "Wang"]
         withStars?: string[]; // e.g., ["TianFu"]
+        mutagen?: string; // e.g., "Lu", "Quan"
     };
     content: {
         summary: string;

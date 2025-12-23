@@ -226,7 +226,7 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         // Simple approximation: Prediction Year - Birth Year + 1
         const pYear = Solar.fromDate(predictionDate).getYear();
         const currentAge = pYear - input.year + 1;
-        daXianDateRange = `Age ${currentAge}`; // Display Age for now
+        daXianDateRange = `虛歲 ${currentAge}`; // Display Age for now
 
         // 2. Find which Palace covers this Age
         // We need to check the limits of each palace.

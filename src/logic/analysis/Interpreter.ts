@@ -16,19 +16,22 @@ export class Interpreter {
 
     constructor(chart: ChartData) {
         this.chart = chart;
+
+        // Define map based on known suffixes or normalized names
+        // We expect current system to use 3-char names ('兄弟宮'), but for robustness we can support both.
         this.PALACE_MAP = {
             '命宮': 'Life',
-            '兄弟宮': 'Siblings',
-            '夫妻宮': 'Spouse',
-            '子女宮': 'Children',
-            '財帛宮': 'Wealth',
-            '疾厄宮': 'Health',
-            '遷移宮': 'Travel',
-            '交友宮': 'Friends',
-            '官祿宮': 'Career',
-            '田宅宮': 'Property',
-            '福德宮': 'Karma',
-            '父母宮': 'Parents'
+            '兄弟宮': 'Siblings', '兄弟': 'Siblings',
+            '夫妻宮': 'Spouse', '夫妻': 'Spouse',
+            '子女宮': 'Children', '子女': 'Children',
+            '財帛宮': 'Wealth', '財帛': 'Wealth',
+            '疾厄宮': 'Health', '疾厄': 'Health',
+            '遷移宮': 'Travel', '遷移': 'Travel',
+            '交友宮': 'Friends', '交友': 'Friends',
+            '官祿宮': 'Career', '官祿': 'Career',
+            '田宅宮': 'Property', '田宅': 'Property',
+            '福德宮': 'Karma', '福德': 'Karma',
+            '父母宮': 'Parents', '父母': 'Parents'
         };
 
         this.STAR_MAP = {
@@ -40,6 +43,7 @@ export class Interpreter {
             '左輔': 'ZuoFu', '右弼': 'YouBi', '文昌': 'WenChang', '文曲': 'WenQu',
             '天魁': 'TianKui', '天鉞': 'TianYue', '祿存': 'LuCun', '天馬': 'TianMa',
             '擎羊': 'QingYang', '陀羅': 'TuoLuo', '火星': 'HuoXing', '鈴星': 'LingXing',
+            '地空': 'DiKong', '地劫': 'DiJie',
             // Misc Stars
             '天官': 'TianGuan',
             '天福': 'TianFu_Misc',
@@ -74,7 +78,12 @@ export class Interpreter {
             '旬空': 'XunKong',
             '天空': 'TianKong',
             '天傷': 'TianShang',
-            '天使': 'TianShi'
+            '天使': 'TianShi',
+            '唐符': 'TangFu',
+            '天德': 'TianDe',
+            '月馬': 'YueMa',
+            '國印': 'GuoYin',
+            '月德': 'YueDe'
         };
 
         this.GOD_MAP = {
@@ -105,17 +114,25 @@ export class Interpreter {
         // Or just map them as they are found?
         // Let's find each by name to ensure order: Life, Siblings, Spouse, Children, Wealth, Health, Travel, Friends, Career, Property, Karma, Parents.
 
-        const sequence = [
-            '命宮', '兄弟宮', '夫妻宮', '子女宮', '財帛宮', '疾厄宮',
-            '遷移宮', '交友宮', '官祿宮', '田宅宮', '福德宮', '父母宮'
-        ];
+        // Use PALACE_MAP keys or chart palaces directly, but we want specific sequence.
+        // We know the standard ZWDS sequence.
+        const standardSequenceMap: Record<string, number> = {
+            'Life': 0, 'Siblings': 1, 'Spouse': 2, 'Children': 3, 'Wealth': 4, 'Health': 5,
+            'Travel': 6, 'Friends': 7, 'Career': 8, 'Property': 9, 'Karma': 10, 'Parents': 11
+        };
 
-        for (const name of sequence) {
-            const p = this.chart.palaces.find(cp => cp.palaceName === name);
-            if (p) {
-                palacesAnalysis.push(this.analyzePalace(p));
-            }
+        // Iterate over all actual palaces in the chart
+        for (const p of this.chart.palaces) {
+            palacesAnalysis.push(this.analyzePalace(p));
         }
+
+        // Sort them by standard sequence for consistent output order (optional but good)
+        palacesAnalysis.sort((a, b) => {
+            // We need to resolve their English key to sort
+            const keyA = this.PALACE_MAP[a.palaceName];
+            const keyB = this.PALACE_MAP[b.palaceName];
+            return (standardSequenceMap[keyA] || 99) - (standardSequenceMap[keyB] || 99);
+        });
 
         const lifeAnalysis = palacesAnalysis.find(p => p.palaceName === '命宮');
 
@@ -150,14 +167,38 @@ export class Interpreter {
         const godsAnalysis: StarAnalysis[] = [];
         let commentParts: string[] = [];
 
-        // 1. Analyze Major Stars
-        for (const star of palace.majorStars) {
+        // 1. Analyze Major Stars (Including Borrowed Stars)
+        let starsToAnalyze = palace.majorStars;
+
+        // isBorrowed variable tracking for suffix logic
+        let isBorrowed = false;
+
+        if (palace.majorStars.length === 0) {
+            const oppositeIndex = (palace.branchIndex + 6) % 12;
+            const oppositePalace = this.chart.palaces.find(p => p.branchIndex === oppositeIndex);
+            if (oppositePalace && oppositePalace.majorStars.length > 0) {
+                starsToAnalyze = oppositePalace.majorStars;
+                isBorrowed = true;
+            }
+        }
+
+        for (const star of starsToAnalyze) {
             const starKey = this.STAR_MAP[star.name];
             const palaceKey = this.PALACE_MAP[palace.palaceName];
 
             let desc = "星性特質...";
 
             if (starKey && palaceKey) {
+                // If borrowed, we interpret the star as if it were in THIS palace, or the original?
+                // Standard ZWDS: View star as if it is in the current palace (Empty Palace), but weaker.
+                // OR View star in its original palace but applied here?
+                // "借星安宮": Use the opposite stars as if they are here.
+                // So we use `palaceKey` (current empty palace) for lookup?
+                // Or `oppositePalaceKey`?
+                // Usually "Borrow Star to Sit Here". So we scan `starKey` + `palaceKey` (Current).
+                // BUT, the database might only have entries for VALID placements.
+                // Does `Interpreter` DB have entries for every star in every palace? Yes.
+
                 const lookupKey = `${starKey}_${palaceKey}`;
                 const rule = majorStars[lookupKey];
                 if (rule) {
@@ -165,9 +206,13 @@ export class Interpreter {
                 }
             }
 
+            if (isBorrowed) {
+                desc = `【借星】${desc}`;
+            }
+
             majorAnalysis.push({
-                starName: star.name,
-                brightness: star.brightness,
+                starName: star.name + (isBorrowed ? ' (借)' : ''),
+                brightness: star.brightness, // Borrowed brightness usually drops? For now keep original or hide.
                 description: desc,
                 keywords: []
             });
@@ -187,13 +232,16 @@ export class Interpreter {
                     }
 
                     if (rule) {
+                        const mutagenLabel = this.getMutagenLabel(mutagenType);
+                        const label = `【${star.name}化${mutagenLabel}】：`;
+
                         siHuaAnalysis.push({
-                            starName: `${star.name}化${this.getMutagenLabel(mutagenType)}`,
+                            starName: `${star.name}化${mutagenLabel}`,
                             brightness: star.brightness || '',
-                            description: rule.content.description,
+                            description: label + rule.content.description,
                             keywords: rule.content.keywords
                         });
-                        commentParts.push(`【${star.name}化${this.getMutagenLabel(mutagenType)}】${rule.content.summary}`);
+                        commentParts.push(`【${star.name}化${mutagenLabel}】${rule.content.summary}`);
                     }
                 }
             }
@@ -692,5 +740,69 @@ export class Interpreter {
             case 'Ji': return '忌';
             default: return '';
         }
+    }
+    public enrichChartWithDescriptions(): void {
+        const analysis = this.analyze();
+
+        // Map analysis back to chart data
+        analysis.allPalaces.forEach(palaceAnalysis => {
+            const chartPalace = this.chart.palaces.find(p => p.palaceName === palaceAnalysis.palaceName);
+            if (!chartPalace) return;
+
+            // Enrich Major Stars
+            chartPalace.majorStars.forEach(star => {
+                const analysisStar = palaceAnalysis.majorStars.find(s => s.starName === star.name);
+                if (analysisStar) {
+                    star.description = analysisStar.description;
+                    // Also enable brightness text if missing (though usually calc'd in builder)
+                }
+
+                // Check mutation descriptions
+                if (star.mutagen) {
+                    const siHua = palaceAnalysis.siHua.find(s => s.starName.includes(star.name));
+                    if (siHua) {
+                        star.description = (star.description ? star.description + "\n\n" : "") +
+                            `【四化解析】${siHua.description}`;
+                    }
+                }
+            });
+
+            // Enrich Minor Stars
+            chartPalace.minorStars.forEach(star => {
+                const analysisStar = palaceAnalysis.minorStars.find(s => s.starName === star.name);
+                if (analysisStar) {
+                    star.description = analysisStar.description;
+                }
+            });
+
+            // Handle Borrowed Stars Injection
+            // If the chart palace has no major stars, but the analysis found some (via borrowing),
+            // we must inject these borrowed stars into the chart data so the UI can render them.
+            if (chartPalace.majorStars.length === 0 && palaceAnalysis.majorStars.length > 0) {
+                const oppositeIndex = (chartPalace.branchIndex + 6) % 12;
+                const oppositePalace = this.chart.palaces.find(p => p.branchIndex === oppositeIndex);
+
+                if (oppositePalace && oppositePalace.majorStars.length > 0) {
+                    // Clone stars from opposite palace
+                    chartPalace.majorStars = oppositePalace.majorStars.map(s => {
+                        const clonedStar = { ...s };
+                        // Find matching analysis (which likely has " (借)" suffix)
+                        const borrowedName = s.name + ' (借)';
+                        const analysisStar = palaceAnalysis.majorStars.find(as => as.starName === borrowedName || as.starName === s.name);
+
+                        if (analysisStar) {
+                            clonedStar.description = analysisStar.description;
+                            clonedStar.name = borrowedName; // Update name to show borrowed status
+                        }
+                        return clonedStar;
+                    });
+                }
+            }
+
+            // We could also attach the "Overall Comment" to the PalaceData if we added a field for it
+            // For now, modal mostly shows stars.
+            // Let's verify if PalaceData has a 'comment' field? No.
+            // The modal uses stars. 
+        });
     }
 }

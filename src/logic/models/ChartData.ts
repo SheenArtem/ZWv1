@@ -9,6 +9,7 @@ export interface Star {
     liuNianMutagen?: StarMutagen; // Si Hua (Liu Nian)
     liuYueMutagen?: StarMutagen; // Si Hua (Liu Yue)
     daXianMutagen?: StarMutagen; // Si Hua (Da Xian)
+    description?: string; // New field for detailed analysis
 }
 
 export interface TwelveGods {

@@ -11,9 +11,11 @@ interface PalaceCardProps {
     yearPalaceName?: string;
     monthPalaceName?: string;
     decadePalaceName?: string;
+    onClick?: () => void;
+    isSelected?: boolean;
 }
 
-export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, isLiuYue, displayMode = 'all', yearPalaceName, monthPalaceName, decadePalaceName }) => {
+export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, isLiuYue, displayMode = 'all', yearPalaceName, monthPalaceName, decadePalaceName, onClick, isSelected }) => {
     // Dynamic Font Sizing Constants - Maximum readability (Aggressive)
     const dynamicTextXs = "text-[clamp(10px,1.1vh,12px)]";
     const dynamicTextBase = "text-[clamp(16px,1.8vh,20px)]";
@@ -136,12 +138,16 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
     };
 
     return (
-        <div className={clsx(
-            "p-0.5 flex flex-col justify-between hover:bg-slate-800 transition-colors duration-200 bg-slate-950 overflow-hidden relative",
-            className,
-            isLiuNian && "ring-[2px] ring-inset ring-amber-500 z-10",
-            isLiuYue && !isLiuNian && "ring-[2px] ring-inset ring-emerald-500 z-10"
-        )}>
+        <div
+            onClick={onClick}
+            className={clsx(
+                "p-0.5 flex flex-col justify-between transition-all duration-200 bg-slate-950 overflow-hidden relative cursor-pointer group",
+                isSelected ? "ring-2 ring-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.4)] z-20" : "hover:bg-slate-900",
+                className,
+                isLiuNian && !isSelected && "ring-[2px] ring-inset ring-amber-500 z-10",
+                isLiuYue && !isLiuNian && !isSelected && "ring-[2px] ring-inset ring-emerald-500 z-10"
+            )}
+        >
             {/* Corner Badges */}
             {isLiuNian && (displayMode === 'all' || displayMode === 'year') && (
                 <div className={clsx("absolute top-0 right-0 bg-amber-600 px-1 text-white font-bold z-20", dynamicTextSm)}>

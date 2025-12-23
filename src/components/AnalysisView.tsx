@@ -22,7 +22,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ chart }) => {
     }
 
     return (
-        <div className="p-4 md:p-6 bg-slate-950 text-slate-100 min-h-screen overflow-y-auto">
+        <div className="p-4 md:p-6 bg-slate-950 text-slate-100 h-full overflow-y-auto w-full">
             <h2 className="text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">
                 紫微斗數論命分析報告 (Full Analysis)
             </h2>
@@ -50,8 +50,8 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ chart }) => {
 
                     return (
                         <div key={pIdx} className={`rounded-xl p-5 shadow-md border transition-all hover:shadow-xl ${isLifeParent
-                                ? 'bg-slate-900 border-purple-500/50 shadow-purple-900/20'
-                                : 'bg-slate-900/50 border-slate-800 hover:border-slate-700'
+                            ? 'bg-slate-900 border-purple-500/50 shadow-purple-900/20'
+                            : 'bg-slate-900/50 border-slate-800 hover:border-slate-700'
                             }`}>
                             <h3 className={`text-lg font-bold mb-4 pb-2 border-b flex justify-between items-center ${isLifeParent ? 'text-purple-400 border-purple-900/50' : 'text-amber-500 border-slate-800'
                                 }`}>

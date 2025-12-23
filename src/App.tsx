@@ -3,17 +3,26 @@ import { InputForm } from './components/InputForm';
 import { ChartGrid } from './components/Chart/ChartGrid';
 import { AnalysisView } from './components/AnalysisView';
 import { BirthDetails } from './logic/models/BirthDetails';
-import { ChartData } from './logic/models/ChartData';
+import { ChartData, PalaceData } from './logic/models/ChartData';
 import { generateChart } from './logic/ChartBuilder';
+import { PalaceAnalysisModal } from './components/Modals/PalaceAnalysisModal';
+import { Interpreter } from './logic/analysis/Interpreter';
 
 function App() {
     const [chartData, setChartData] = useState<ChartData | null>(null);
     const [activeTab, setActiveTab] = useState<'birth' | 'decade' | 'year' | 'month' | 'analysis'>('birth');
+    const [selectedPalace, setSelectedPalace] = useState<PalaceData | null>(null);
+
 
     const handleGenerate = (details: BirthDetails, predictionDate?: Date) => {
         try {
             // Generate the chart using logic engine
             const data = generateChart(details, predictionDate);
+
+            // Enrich with Analysis Text
+            const interpreter = new Interpreter(data);
+            interpreter.enrichChartWithDescriptions();
+
             setChartData(data);
         } catch (error) {
             alert(`❌ ERROR in generateChart:\n${error}`);
@@ -120,12 +129,19 @@ function App() {
                                 <ChartGrid
                                     chart={chartData}
                                     displayMode={activeTab}
+                                    onPalaceClick={setSelectedPalace}
+                                    selectedPalaceId={selectedPalace?.palaceName}
                                 />
                             )}
                         </div>
                     )}
                 </main>
             </div>
+            <PalaceAnalysisModal
+                isOpen={!!selectedPalace}
+                onClose={() => setSelectedPalace(null)}
+                palace={selectedPalace}
+            />
         </div>
     );
 }
