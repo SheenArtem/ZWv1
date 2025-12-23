@@ -94,13 +94,35 @@ export class Interpreter {
     }
 
     public analyze(): AnalysisResult {
-        const lifePalace = this.chart.palaces.find(p => p.palaceName === '命宮');
+        const palacesAnalysis: PalaceAnalysis[] = [];
 
-        if (!lifePalace) {
+        // Analyze all 12 palaces
+        // Palaces are usually sorted by branchIndex or just in the list. 
+        // We want them effectively in a specific order? 
+        // Usually the user wants to see Life, Siblings, Spouse... in standard ZWDS sequence.
+        // The chart.palaces array *should* contain 12 palaces.
+        // Let's sort them by the standard sequence relative to Life Palace?
+        // Or just map them as they are found?
+        // Let's find each by name to ensure order: Life, Siblings, Spouse, Children, Wealth, Health, Travel, Friends, Career, Property, Karma, Parents.
+
+        const sequence = [
+            '命宮', '兄弟宮', '夫妻宮', '子女宮', '財帛宮', '疾厄宮',
+            '遷移宮', '交友宮', '官祿宮', '田宅宮', '福德宮', '父母宮'
+        ];
+
+        for (const name of sequence) {
+            const p = this.chart.palaces.find(cp => cp.palaceName === name);
+            if (p) {
+                palacesAnalysis.push(this.analyzePalace(p));
+            }
+        }
+
+        const lifeAnalysis = palacesAnalysis.find(p => p.palaceName === '命宮');
+
+        if (!lifeAnalysis) {
             throw new Error("Life Palace not found in chart");
         }
 
-        const lifeAnalysis = this.analyzePalace(lifePalace);
         const formationList = this.checkFormations();
 
         // Enhance summary with formations
@@ -116,6 +138,7 @@ export class Interpreter {
 
         return {
             lifePalace: lifeAnalysis,
+            allPalaces: palacesAnalysis,
             summary: finalSummary
         };
     }
@@ -356,9 +379,27 @@ export class Interpreter {
             this.addFormation(results, 'ZiFuTongGong');
         }
 
+        // 4b. Zi Fu Chao Yuan (紫府朝垣)
+        // ZiWei and TianFu in Triad (SanFang) but NOT in Life (which would be Tong Gong).
+        // Usually implies Life is likely empty or has other stars, checking Triad.
+        if (!majorNames.includes('紫微') && !majorNames.includes('天府')) {
+            if (triadStars.has('紫微') && triadStars.has('天府')) {
+                this.addFormation(results, 'ZiFuChaoYuan');
+            }
+        }
+
+        // 4c. Jun Chen Qing Hui (君臣慶會)
+        // Life has ZiWei. SanFangSiZheng has many helpers: ZuoFu/YouBi, WenChang/WenQu, TianKui/TianYue.
+        if (majorNames.includes('紫微')) {
+            const helpers = ['左輔', '右弼', '文昌', '文曲', '天魁', '天鉞'];
+            const count = helpers.filter(h => triadStars.has(h) || minorNames.includes(h)).length;
+            if (count >= 3) { // Threshold for "Qing Hui" (Meeting)
+                this.addFormation(results, 'JunChenQingHui');
+            }
+        }
+
         // 5. Ji Yue Tong Liang (機月同梁) - Triad has Ji, Yue, Tong, Liang
         if (triadStars.has('天機') && triadStars.has('太陰') && triadStars.has('天同') && triadStars.has('天梁')) {
-            // Usually requires specific positioning, but this is a broad check
             this.addFormation(results, 'JiYueTongLiang');
         }
 
@@ -372,17 +413,31 @@ export class Interpreter {
             this.addFormation(results, 'JinCanGuangHui');
         }
 
-        // 8. Ri Yue Bing Ming (日月並明) - Sun@Si(5) + Moon@You(9) (Life or Triad?)
-        // Usually refers to specific positions. If Life is empty or weak, and these are in Triad.
-        // Or simpler: Just checks if Sun is in Si and Moon is in You in the chart?
-        // Let's stick to standard def: Life Palace isn't strictly defined, but usually involves these stars being bright.
-        // Definition: Sun@Si, Moon@You.
+        // 8. Ri Yue Bing Ming (日月並明) - Sun@Si(5) + Moon@You(9)
         const sunPalace = this.chart.palaces.find(p => p.majorStars.some(s => s.name === '太陽'));
         const moonPalace = this.chart.palaces.find(p => p.majorStars.some(s => s.name === '太陰'));
         if (sunPalace?.branchIndex === 5 && moonPalace?.branchIndex === 9) {
-            // Often usually implies Life is in Chou (1) or elsewhere interacting.
-            // But the pattern itself is the key.
             this.addFormation(results, 'RiYueBingMing');
+        }
+
+        // 8b. Ri Yue Fan Bei (日月反背)
+        // Sun in [Xu, Hai, Zi] (10, 11, 0) AND Moon in [Mao, Chen, Si] (3, 4, 5).
+        // And Life contains one of them or is involved? Usually affects the person if they have these stars.
+        // We trigger if Life has Sun or Moon in these positions, OR if the pattern simply exists and Life is related?
+        // Sticking to "Life has Sun or Moon" or "Life is Empty opposite them".
+        // Simplest strong check: Sun is trapped AND Moon is trapped.
+        // Refinement: Check if Life has Sun (Trap) or Moon (Trap).
+        const sunBranch = sunPalace?.branchIndex;
+        const moonBranch = moonPalace?.branchIndex;
+        const isSunTrap = sunBranch !== undefined && [10, 11, 0].includes(sunBranch);
+        const isMoonTrap = moonBranch !== undefined && [3, 4, 5].includes(moonBranch);
+
+        if (isSunTrap && isMoonTrap) {
+            // Check if Life is affected (Has Sun or Moon)
+            // Or broadly applicable. Let's apply if Life has Sun or Moon.
+            if (majorNames.includes('太陽') || majorNames.includes('太陰')) {
+                this.addFormation(results, 'RiYueFanBei');
+            }
         }
 
         // 9. Yue Sheng Cang Hai (月生滄海) - Life@Zi(0), Moon+Tong
@@ -410,7 +465,7 @@ export class Interpreter {
             this.addFormation(results, 'QiShaChaoDou');
         }
 
-        // 14. Ma Tou Dai Jian (馬頭帶劍) - Life@Wu(6), QingYang (+ often Tong/Yin/Greedy, but QY is key)
+        // 14. Ma Tou Dai Jian (馬頭帶劍) - Life@Wu(6), QingYang
         if (lifePalace.branchIndex === 6 && minorNames.includes('擎羊')) {
             this.addFormation(results, 'MaTouDaiJian');
         }
@@ -422,27 +477,45 @@ export class Interpreter {
             this.addFormation(results, 'JiJuMaoYou');
         }
 
-        // 16. Sha Gong Lian Zhen (殺拱廉貞) - LianZhen in Life, QiSha meeting (Triad or Opposing)
+        // 16. Sha Gong Lian Zhen (殺拱廉貞) - LianZhen in Life, QiSha meeting
         if (majorNames.includes('廉貞') && (majorNames.includes('七殺') || triadStars.has('七殺'))) {
             this.addFormation(results, 'ShaGongLianZhen');
+        }
+
+        // 16b. Xing Qiu Jia Yin (刑囚夾印)
+        // Tian Xiang (Yin) in Life.
+        // Neighbors (Jia) have Lian Zhen (Qiu) and Qing Yang (Xing).
+        // OR Lian Zhen + Tian Xiang in same palace (Tong Gong) with Qing Yang.
+        // Given star layout, Lian Zhen and Tian Xiang are often together in Zi/Wu.
+        // If they are together, checking Tong Gong is safer.
+        if (majorNames.includes('天相') && majorNames.includes('廉貞') &&
+            (minorNames.includes('擎羊') || triadStars.has('擎羊'))) { // Allow Triad for QingYang to be "meeting"
+            this.addFormation(results, 'XingQiuJiaYin');
         }
 
         // 17. Ju Feng Si Sha (巨逢四煞) - JuMen in Life + Any of (Yang, Tuo, Huo, Ling)
         if (majorNames.includes('巨門')) {
             const fourKillers = ['擎羊', '陀羅', '火星', '鈴星'];
-            // Strict: Killers in Life. Broad: Killers in SanFang.
-            // Description says "遇" (meet), likely SanFang. But "坐命" (Sit in Life) usually implies direct influence.
-            // Let's check SanFang for broad detection.
             if (fourKillers.some(k => minorNames.includes(k) || triadStars.has(k))) {
                 this.addFormation(results, 'JuFengSiSha');
             }
         }
 
         // 18. Ming Li Feng Kong (命裏逢空) - DiKong or DiJie in Life
-        // Note: Check if DiKong/DiJie are in minorNames. If not mapped, this won't trigger.
-        // Assuming they are mapped if present in chart data.
         if (minorNames.includes('地空') || minorNames.includes('地劫') || minorNames.includes('天空')) {
             this.addFormation(results, 'MingLiFengKong');
+        }
+
+        // 18b. Kong Jie Jia Ming (空劫夾命)
+        // Life is flanked by Di Kong and Di Jie.
+        const prevPalace = this.chart.palaces.find(p => p.branchIndex === (lifePalace.branchIndex + 11) % 12);
+        const nextPalace = this.chart.palaces.find(p => p.branchIndex === (lifePalace.branchIndex + 1) % 12);
+        const prevMinors = prevPalace?.minorStars.map(s => s.name) || [];
+        const nextMinors = nextPalace?.minorStars.map(s => s.name) || [];
+
+        if ((prevMinors.includes('地空') && nextMinors.includes('地劫')) ||
+            (prevMinors.includes('地劫') && nextMinors.includes('地空'))) {
+            this.addFormation(results, 'KongJieJiaMing');
         }
 
         // 19. Tian Liang Gong Yue (天梁拱月) - Liang + Moon in Si(5)/Hai(11)/Shen(8)
@@ -454,28 +527,27 @@ export class Interpreter {
         }
 
         // 20. Wen Xing Yu Jia (文星遇夾)
-        // Simplified check: if Chang/Qu in Life and Kong/Jie in SanFang/Life is not "Jia".
-        // Leave "Jia" (Flanking) as TODO or Simplified "Meet".
-        // Description says "被地空地劫夾拱".
-        // Let's implement simplified "Meet" for now to detect the *risk*, or skip flanking for accurate v1.
-        // Skip flanking precise calculation for now.
+        // Wen Chang or Wen Qu in Life. Flanked by Di Kong / Di Jie? 
+        // Or "Yu Jia" means "Encounters Flanking".
+        // Formation def says: "Wen Chang/Qu in Life, flanked by Di Kong/Di Jie".
+        if (minorNames.includes('文昌') || minorNames.includes('文曲')) {
+            if ((prevMinors.includes('地空') && nextMinors.includes('地劫')) ||
+                (prevMinors.includes('地劫') && nextMinors.includes('地空'))) {
+                this.addFormation(results, 'WenXingYuJia');
+            }
+        }
 
         // 21. Tian Fu Chao Yuan (天府朝垣) - TianFu in Life, No ZiWei
+        // Refined: Life has Tian Fu, but NOT Zi Wei, Wu Qu, Lian Zhen. (Alone)
+        // Or broad: Just Tian Fu in Life and "Miao".
+        // Let's stick to original broad check but exclude ZiWei (Tong Gong).
         if (majorNames.includes('天府') && !majorNames.includes('紫微')) {
             this.addFormation(results, 'TianFuChaoYuan');
         }
 
         // 22. Fu Xiang Chao Yuan (府相朝垣) - Fu/Xiang in Triad (meeting Life)
-        // Strictly: Life has one (e.g. TianFu), Triad has TianXiang. Or Life has neither but they are in Triad?
-        // "Chao Yuan" usually means meeting from Triad.
-        // Let's check if Triad has BOTH TianFu and TianXiang, OR (Life has one AND Triad has other).
-        // Since Life is part of SanFangSiZheng set in my helper...
-        // Wait, getSanFangSiZheng includes Life.
-        // So checking if 'TianFu' and 'TianXiang' are in triadStars is sufficient to say they "assemble".
-        // But we need to ensure they are not just "there" but forming the pattern (usually implies good position).
-        // Let's stick to simple existence for v4.0 pattern match.
         if (triadStars.has('天府') && triadStars.has('天相')) {
-            if (!this.hasFormation(results, 'ZiFuTongGong')) { // Avoid redundancy if covered by ZiFu
+            if (!this.hasFormation(results, 'ZiFuTongGong')) {
                 this.addFormation(results, 'FuXiangChaoYuan');
             }
         }
@@ -496,9 +568,6 @@ export class Interpreter {
         }
 
         // 26. Wen Xing Shi Wei (文星失位) - Chang/Qu in Trap + Killer
-        // Trap for Chang/Qu: Yin(2), Wu(6), Xu(10).
-        // Text says "Xu, Hai, Zi" was assumed, but standard is Yin/Wu/Xu.
-        // Let's correct to [2, 6, 10].
         const hasChangQu = minorNames.includes('文昌') || minorNames.includes('文曲');
         const inTrap = [2, 6, 10].includes(lifePalace.branchIndex);
         const hasKiller = ['擎羊', '陀羅', '火星', '鈴星'].some(k => minorNames.includes(k));
@@ -511,18 +580,15 @@ export class Interpreter {
 
         // 27. Ji Xiang Li Ming (極向離明) - Purple Star in Wu(6)
         if (lifePalace.branchIndex === 6 && majorNames.includes('紫微')) {
-            // Should check for no killers, but standard check is position first
             this.addFormation(results, 'JiXiangLiMing');
         }
 
         // 28. Tan Wu Tong Xing (貪武同行) - Greedy+Military in Chou(1) or Wei(7)
-        // Usually requires "Tong Gong" (Same palace)
         if ((lifePalace.branchIndex === 1 || lifePalace.branchIndex === 7) && majorNames.includes('貪狼') && majorNames.includes('武曲')) {
             this.addFormation(results, 'TanWuTongXing');
         }
 
         // 29. Huo Tan / Ling Tan (火貪/鈴貪)
-        // Greedy in Life, Fire/Bell in Triad (or Life)
         if (majorNames.includes('貪狼')) {
             if (minorNames.includes('火星') || triadStars.has('火星')) {
                 this.addFormation(results, 'HuoTan');
@@ -532,16 +598,28 @@ export class Interpreter {
             }
         }
 
-        // 30. Lu Ma Jiao Chi (祿馬交馳) - Lu Cun + Tian Ma in Triad
-        // Note: Tian Ma might be in minorStars or misc.
-        // Assuming '天馬' and '祿存' are in minorStars map.
-        if (triadStars.has('祿存') && triadStars.has('天馬')) {
+        // 30. Lu Ma Jiao Chi (祿馬交馳) - Lu Cun + Tian Ma
+        // Check Life.
+        if ((minorNames.includes('祿存') && minorNames.includes('天馬')) ||
+            (triadStars.has('祿存') && triadStars.has('天馬'))) {
             this.addFormation(results, 'LuMaJiaoChi');
         }
 
+        // 30b. Yang Tuo Jia Ming (羊陀夾命)
+        // Lu Cun in Life implies Yang/Tuo flank it.
+        if (minorNames.includes('祿存')) {
+            this.addFormation(results, 'YangTuoJiaMing');
+        }
+
+        // 30c. Liang Chong Hua Gai (兩重華蓋)
+        // Lu Cun AND Hua Lu (or both present). Meet Di Kong/Di Jie.
+        // Simplified: Lu + (Kong OR Jie).
+        const hasLu = minorNames.includes('祿存') || lifePalace.majorStars.some((s: any) => s.mutagen === 'Lu');
+        if (hasLu && (minorNames.includes('地空') || minorNames.includes('地劫') || triadStars.has('地空') || triadStars.has('地劫'))) {
+            this.addFormation(results, 'LiangChongHuaGai');
+        }
+
         // 31. San Qi Jia Hui (三奇加會) - Hua Lu, Hua Quan, Hua Ke in Triad
-        // Need to check Si Hua. SiHua is stored in palace.siHua array.
-        // Let's gather all Si Hua in Triad.
         const triadSiHua = new Set<string>();
         [lifePalace,
             this.chart.palaces.find(p => p.branchIndex === (lifePalace.branchIndex + 4) % 12),
@@ -559,7 +637,7 @@ export class Interpreter {
         }
 
         // 32. Quan Lu Xun Feng (權祿巡逢) - Hua Lu + Hua Quan in Triad
-        if (triadSiHua.has('Lu') && triadSiHua.has('Quan') && !triadSiHua.has('Ke')) { // If Ke is there, it's San Qi
+        if (triadSiHua.has('Lu') && triadSiHua.has('Quan') && !triadSiHua.has('Ke')) {
             this.addFormation(results, 'QuanLuXunFeng');
         }
 
@@ -571,6 +649,23 @@ export class Interpreter {
         // 34. Tian Fu Lin Xu (天府臨戌) - Tian Fu in Xu(10)
         if (lifePalace.branchIndex === 10 && majorNames.includes('天府')) {
             this.addFormation(results, 'TianFuLinXu');
+        }
+
+        // 35. Fan Shui Tao Hua (泛水桃花)
+        // Tan Lang in Zi (0). Or Lian Zhen + Tan Lang in Hai (11) - Wait, Lian Tan in Hai is "Fan Shui"?
+        // Usually Tan Lang in Zi is the main one.
+        if ((lifePalace.branchIndex === 0 && majorNames.includes('貪狼')) ||
+            (lifePalace.branchIndex === 11 && majorNames.includes('廉貞') && majorNames.includes('貪狼'))) {
+            this.addFormation(results, 'FanShuiTaoHua');
+        }
+
+        // 36. Ma Luo Kong Wang (馬落空亡)
+        // Tian Ma + (DiKong, DiJie, TianKong, JieKong)
+        // Tian Ma in Life.
+        if (minorNames.includes('天馬')) {
+            if (minorNames.includes('地空') || minorNames.includes('地劫') || minorNames.includes('天空') || minorNames.includes('截空')) {
+                this.addFormation(results, 'MaLuoKongWang');
+            }
         }
 
         return results;

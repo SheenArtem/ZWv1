@@ -32,27 +32,62 @@ function App() {
                 <aside className="w-[400px] bg-slate-900 border-r border-slate-800 overflow-y-auto shrink-0 hidden md:flex md:flex-col z-10 p-4">
                     <InputForm onSubmit={handleGenerate} />
 
-                    {/* View Mode Switching Controls - Sticky Logic or just below input */}
-                    {chartData && chartData.liuNianIndex !== undefined && (
+                    {/* View Mode Switching Controls */}
+                    {chartData && (
                         <div className="mt-4 pt-4 border-t border-slate-800 animate-fade-in">
                             <p className="text-sm text-slate-400 mb-2 font-bold">顯示模式</p>
                             <div className="grid grid-cols-2 gap-2">
-                                {(['birth', 'decade', 'year', 'month', 'analysis'] as const).map((mode) => (
-                                    <button
-                                        key={mode}
-                                        onClick={() => setActiveTab(mode)}
-                                        className={`py-2 px-3 rounded text-sm font-bold transition-all border ${activeTab === mode
-                                            ? 'bg-purple-600 text-white border-purple-500 shadow-md transform scale-[1.02]'
-                                            : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200 hover:bg-slate-700'
-                                            }`}
-                                    >
-                                        {mode === 'birth' && '本命盤'}
-                                        {mode === 'decade' && '大限盤'}
-                                        {mode === 'year' && '流年盤'}
-                                        {mode === 'month' && '流月盤'}
-                                        {mode === 'analysis' && '論命分析'}
-                                    </button>
-                                ))}
+                                <button
+                                    onClick={() => setActiveTab('birth')}
+                                    className={`py-2 px-3 rounded text-sm font-bold transition-all border ${activeTab === 'birth'
+                                        ? 'bg-purple-600 text-white border-purple-500 shadow-md transform scale-[1.02]'
+                                        : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200 hover:bg-slate-700'
+                                        }`}
+                                >
+                                    本命盤
+                                </button>
+
+                                <button
+                                    onClick={() => setActiveTab('analysis')}
+                                    className={`py-2 px-3 rounded text-sm font-bold transition-all border ${activeTab === 'analysis'
+                                        ? 'bg-purple-600 text-white border-purple-500 shadow-md transform scale-[1.02]'
+                                        : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200 hover:bg-slate-700'
+                                        }`}
+                                >
+                                    論命分析
+                                </button>
+
+                                {chartData.liuNianIndex !== undefined && (
+                                    <>
+                                        <button
+                                            onClick={() => setActiveTab('decade')}
+                                            className={`py-2 px-3 rounded text-sm font-bold transition-all border ${activeTab === 'decade'
+                                                ? 'bg-purple-600 text-white border-purple-500 shadow-md transform scale-[1.02]'
+                                                : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200 hover:bg-slate-700'
+                                                }`}
+                                        >
+                                            大限盤
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveTab('year')}
+                                            className={`py-2 px-3 rounded text-sm font-bold transition-all border ${activeTab === 'year'
+                                                ? 'bg-purple-600 text-white border-purple-500 shadow-md transform scale-[1.02]'
+                                                : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200 hover:bg-slate-700'
+                                                }`}
+                                        >
+                                            流年盤
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveTab('month')}
+                                            className={`py-2 px-3 rounded text-sm font-bold transition-all border ${activeTab === 'month'
+                                                ? 'bg-purple-600 text-white border-purple-500 shadow-md transform scale-[1.02]'
+                                                : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200 hover:bg-slate-700'
+                                                }`}
+                                        >
+                                            流月盤
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         </div>
                     )}
@@ -68,7 +103,7 @@ function App() {
                 {/* Note: In a real app we'd add a toggle, effectively standard layout acts as sidebar on desktop */}
 
                 {/* Right Area: Chart */}
-                <main className="flex-1 overflow-auto bg-slate-950 p-2 md:p-4 flex flex-col items-center">
+                <main className="flex-1 overflow-hidden bg-slate-950 p-1 md:p-2 flex flex-col items-center h-full">
                     {!chartData ? (
                         <div className="flex flex-col items-center justify-center h-full text-slate-500 opacity-50">
                             <div className="text-6xl mb-4">🔮</div>
@@ -78,7 +113,7 @@ function App() {
                             </div>
                         </div>
                     ) : (
-                        <div className="w-full max-w-[95%] animate-fade-in">
+                        <div className="w-full h-full animate-fade-in">
                             {activeTab === 'analysis' ? (
                                 <AnalysisView chart={chartData} />
                             ) : (

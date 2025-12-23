@@ -1,5 +1,6 @@
 export interface AnalysisResult {
     lifePalace: PalaceAnalysis;
+    allPalaces: PalaceAnalysis[]; // Full 12 palaces
     wealthPalace?: PalaceAnalysis;
     careerPalace?: PalaceAnalysis;
     travelPalace?: PalaceAnalysis;
