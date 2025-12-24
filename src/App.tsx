@@ -7,12 +7,12 @@ import { ChartData, PalaceData } from './logic/models/ChartData';
 import { generateChart } from './logic/ChartBuilder';
 import { PalaceAnalysisModal } from './components/Modals/PalaceAnalysisModal';
 import { Interpreter } from './logic/analysis/Interpreter';
+import { buildAIPrompt } from './logic/promptBuilder';
 
 function App() {
     const [chartData, setChartData] = useState<ChartData | null>(null);
     const [activeTab, setActiveTab] = useState<'birth' | 'decade' | 'year' | 'month' | 'analysis'>('birth');
     const [selectedPalace, setSelectedPalace] = useState<PalaceData | null>(null);
-
 
     const handleGenerate = (details: BirthDetails, predictionDate?: Date) => {
         try {
@@ -30,11 +30,20 @@ function App() {
         }
     };
 
+    const handleAIAnalysisClick = async () => {
+        if (!chartData) return;
+        setActiveTab('analysis');
+
+        try {
+            const prompt = buildAIPrompt(chartData);
+            await navigator.clipboard.writeText(prompt);
+        } catch (e) {
+            console.error("Auto-copy failed", e);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-slate-950 text-white flex flex-col h-screen overflow-hidden">
-            {/* Header */}
-
-
             {/* Main Content Area */}
             <div className="flex flex-1 overflow-hidden">
                 {/* Left Sidebar: Input Form */}
@@ -57,13 +66,13 @@ function App() {
                                 </button>
 
                                 <button
-                                    onClick={() => setActiveTab('analysis')}
+                                    onClick={handleAIAnalysisClick}
                                     className={`py-2 px-3 rounded text-sm font-bold transition-all border ${activeTab === 'analysis'
                                         ? 'bg-purple-600 text-white border-purple-500 shadow-md transform scale-[1.02]'
                                         : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200 hover:bg-slate-700'
                                         }`}
                                 >
-                                    論命分析
+                                    AI 論命
                                 </button>
 
                                 {chartData.liuNianIndex !== undefined && (
@@ -107,9 +116,6 @@ function App() {
                         </h1>
                     </div>
                 </aside>
-
-                {/* Mobile Input Toggle (Visible only on small screens) */}
-                {/* Note: In a real app we'd add a toggle, effectively standard layout acts as sidebar on desktop */}
 
                 {/* Right Area: Chart */}
                 <main className="flex-1 overflow-hidden bg-slate-950 p-1 md:p-2 flex flex-col items-center h-full">
