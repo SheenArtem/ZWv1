@@ -7,7 +7,6 @@ import { ChartData, PalaceData } from './logic/models/ChartData';
 import { generateChart } from './logic/ChartBuilder';
 import { PalaceAnalysisModal } from './components/Modals/PalaceAnalysisModal';
 import { Interpreter } from './logic/analysis/Interpreter';
-import { buildAIPrompt } from './logic/promptBuilder';
 
 function App() {
     const [chartData, setChartData] = useState<ChartData | null>(null);
@@ -27,18 +26,6 @@ function App() {
         } catch (error) {
             alert(`❌ ERROR in generateChart:\n${error}`);
             console.error('Error generating chart:', error);
-        }
-    };
-
-    const handleAIAnalysisClick = async () => {
-        if (!chartData) return;
-        setActiveTab('analysis');
-
-        try {
-            const prompt = buildAIPrompt(chartData);
-            await navigator.clipboard.writeText(prompt);
-        } catch (e) {
-            console.error("Auto-copy failed", e);
         }
     };
 
@@ -66,7 +53,7 @@ function App() {
                                 </button>
 
                                 <button
-                                    onClick={handleAIAnalysisClick}
+                                    onClick={() => setActiveTab('analysis')}
                                     className={`py-2 px-3 rounded text-sm font-bold transition-all border ${activeTab === 'analysis'
                                         ? 'bg-purple-600 text-white border-purple-500 shadow-md transform scale-[1.02]'
                                         : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200 hover:bg-slate-700'

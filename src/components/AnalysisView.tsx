@@ -7,18 +7,17 @@ interface AnalysisViewProps {
 }
 
 export const AnalysisView: React.FC<AnalysisViewProps> = ({ chart }) => {
-    // We assume the prompt was likely copied by App.tsx when entering this view,
-    // but we still provide a manual copy button just in case.
     const [copied, setCopied] = useState(false);
+    const [userQuestion, setUserQuestion] = useState('');
 
     const promptText = useMemo(() => {
         try {
-            return buildAIPrompt(chart);
+            return buildAIPrompt(chart, userQuestion);
         } catch (e) {
             console.error("Prompt Generation Error", e);
             return "無法產生提示詞資料";
         }
-    }, [chart]);
+    }, [chart, userQuestion]);
 
     const handleCopy = async () => {
         try {
@@ -58,7 +57,7 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ chart }) => {
                         ✨ AI 大師解盤功能
                     </h2>
                     <p className="text-slate-400">
-                        提示詞已自動複製！請直接前往 AI 工具貼上即可。
+                        利用最新的生成式 AI (如 Google Gemini) 為您進行深度論命。
                     </p>
                 </div>
 
@@ -69,15 +68,31 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ chart }) => {
                     </h3>
                     <ol className="list-decimal list-inside space-y-3 text-slate-300 ml-1">
                         <li>
-                            <span className="text-emerald-400 font-bold">提示詞已自動複製</span> 到您的剪貼簿。
+                            在下方輸入框寫下 <span className="text-indigo-400 font-bold">您想問的問題</span> (選填)。
                         </li>
                         <li>
-                            點擊下方 <span className="text-white font-bold bg-slate-700 px-2 py-0.5 rounded">前往 Google Gemini</span>。
+                            點擊 <span className="text-white font-bold bg-slate-700 px-2 py-0.5 rounded">複製提示詞</span> 按鈕。
                         </li>
                         <li>
-                            在對話框中 <span className="text-white font-bold bg-slate-700 px-2 py-0.5 rounded">貼上 (Ctrl+V)</span> 並送出，即可獲得詳細解盤。
+                            點擊 <span className="text-white font-bold bg-slate-700 px-2 py-0.5 rounded">前往 Google Gemini</span> (或您習慣的 AI 工具)。
+                        </li>
+                        <li>
+                            在對話框中 <span className="text-white font-bold bg-slate-700 px-2 py-0.5 rounded">貼上 (Ctrl+V)</span> 並送出。
                         </li>
                     </ol>
+                </div>
+
+                {/* Question Input Section */}
+                <div className="space-y-2">
+                    <label className="text-base font-bold text-slate-300 flex items-center">
+                        <span className="mr-2">💡</span> 您想問什麼問題？ (可選)
+                    </label>
+                    <textarea
+                        value={userQuestion}
+                        onChange={(e) => setUserQuestion(e.target.value)}
+                        placeholder="例如：我今年適合換工作嗎？我的財運如何？注意什麼健康問題？"
+                        className="w-full h-24 bg-slate-900 border border-slate-700 rounded-lg p-3 text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder:text-slate-600 resize-none"
+                    />
                 </div>
 
                 {/* Action Buttons */}
@@ -86,15 +101,23 @@ export const AnalysisView: React.FC<AnalysisViewProps> = ({ chart }) => {
                         onClick={handleCopy}
                         className={`flex items-center justify-center px-6 py-3 rounded-lg font-bold transition-all transform active:scale-95 ${copied
                                 ? 'bg-green-600 text-white shadow-green-900/50 shadow-lg'
-                                : 'bg-slate-700 hover:bg-slate-600 text-slate-200 shadow-lg'
+                                : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-900/50 shadow-lg'
                             }`}
                     >
-                        {copied ? '✓ 已再次複製' : '📋 手動複製提示詞'}
+                        {copied ? (
+                            <>
+                                <span className="mr-2">✓</span> 已複製到剪貼簿
+                            </>
+                        ) : (
+                            <>
+                                <span className="mr-2">📋</span> 複製提示詞 (Copy)
+                            </>
+                        )}
                     </button>
 
                     <button
                         onClick={handleOpenGemini}
-                        className="flex items-center justify-center px-6 py-3 rounded-lg font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-900/50 shadow-lg transition-all"
+                        className="flex items-center justify-center px-6 py-3 rounded-lg font-bold border border-slate-600 hover:bg-slate-800 hover:border-slate-500 transition-all text-slate-300"
                     >
                         <span className="mr-2">🤖</span> 前往 Google Gemini
                     </button>
