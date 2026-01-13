@@ -501,7 +501,7 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         daXianIndex,
 
         // Display Info
-        birthDate: `${input.year}年${input.month}月${input.day}日 ${input.hour}時`,
+        birthDate: `${input.year}年${input.month}月${input.day}日 ${ZHI_CHARS[lunarHourIndex]}時`,
         lunarDate: `${lunar.lunarYear}年${lunar.lunarMonth}月${lunar.lunarDay}日`,
         baZi: lunar.eightChar,
         zodiac: `${zodiacChar}${zodiacAnimal}`, // e.g. 辰龍
