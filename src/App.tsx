@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { InputForm } from './components/InputForm';
 import { ChartGrid } from './components/Chart/ChartGrid';
-import { AnalysisView } from './components/AnalysisView';
+
 import { BirthDetails } from './logic/models/BirthDetails';
 import { ChartData, PalaceData } from './logic/models/ChartData';
 import { generateChart } from './logic/ChartBuilder';
 import { PalaceAnalysisModal } from './components/Modals/PalaceAnalysisModal';
 import { Interpreter } from './logic/analysis/Interpreter';
+import { generateMarkdown } from './logic/utils/markdownGenerator';
 
 function App() {
     const [chartData, setChartData] = useState<ChartData | null>(null);
-    const [activeTab, setActiveTab] = useState<'birth' | 'decade' | 'year' | 'month' | 'analysis'>('birth');
+    const [activeTab, setActiveTab] = useState<'birth' | 'decade' | 'year' | 'month'>('birth');
     const [selectedPalace, setSelectedPalace] = useState<PalaceData | null>(null);
 
     const handleGenerate = (details: BirthDetails, predictionDate?: Date) => {
@@ -52,15 +53,7 @@ function App() {
                                     本命盤
                                 </button>
 
-                                <button
-                                    onClick={() => setActiveTab('analysis')}
-                                    className={`py-2 px-3 rounded text-sm font-bold transition-all border ${activeTab === 'analysis'
-                                        ? 'bg-purple-600 text-white border-purple-500 shadow-md transform scale-[1.02]'
-                                        : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200 hover:bg-slate-700'
-                                        }`}
-                                >
-                                    AI 論命
-                                </button>
+
 
                                 {chartData.liuNianIndex !== undefined && (
                                     <>
@@ -98,8 +91,20 @@ function App() {
                     )}
 
                     <div className="mt-auto pt-4 pb-2 text-center opacity-80 hover:opacity-100 transition-opacity">
+                        {chartData && (
+                            <button
+                                onClick={() => {
+                                    const md = generateMarkdown(chartData, activeTab);
+                                    navigator.clipboard.writeText(md);
+                                    alert('Markdown Copied (' + activeTab + ' mode');
+                                }}
+                                className="w-full mb-4 py-2 px-3 rounded text-sm font-bold bg-slate-800 text-slate-400 border border-slate-700 hover:text-white hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
+                            >
+                                📋 複製 Markdown
+                            </button>
+                        )}
                         <h1 className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
-                            紫微斗數 v3.5.8
+                            紫微斗數 v3.5.9
                         </h1>
                     </div>
                 </aside>
@@ -116,26 +121,22 @@ function App() {
                         </div>
                     ) : (
                         <div className="w-full h-full animate-fade-in">
-                            {activeTab === 'analysis' ? (
-                                <AnalysisView chart={chartData} />
-                            ) : (
-                                <ChartGrid
-                                    chart={chartData}
-                                    displayMode={activeTab}
-                                    onPalaceClick={setSelectedPalace}
-                                    selectedPalaceId={selectedPalace?.palaceName}
-                                />
-                            )}
+                            <ChartGrid
+                                chart={chartData}
+                                displayMode={activeTab}
+                                onPalaceClick={setSelectedPalace}
+                                selectedPalaceId={selectedPalace?.palaceName}
+                            />
                         </div>
                     )}
                 </main>
-            </div>
+            </div >
             <PalaceAnalysisModal
                 isOpen={!!selectedPalace}
                 onClose={() => setSelectedPalace(null)}
                 palace={selectedPalace}
             />
-        </div>
+        </div >
     );
 }
 
