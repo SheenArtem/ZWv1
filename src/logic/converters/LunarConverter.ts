@@ -16,9 +16,9 @@ export const convertToLunar = (details: BirthDetails): LunarDetails => {
 
     return {
         lunarYear: lunar.getYear(),
-        lunarMonth: lunar.getMonth(),
+        lunarMonth: Math.abs(lunar.getMonth()),
         lunarDay: lunar.getDay(),
-        isLeap: lunar.getMonth() < 0 ? true : false, // lunar-javascript might handle leap logic differently, checking...
+        isLeap: lunar.getMonth() < 0,
         // Actually lunar.getMonth() returns absolute value, but let's check leap property
         // We will verify this with a test.
         ganZhiYear: lunar.getYearInGanZhi(),
