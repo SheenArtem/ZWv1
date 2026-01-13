@@ -13,10 +13,26 @@ export const InputForm = ({ onSubmit }: InputFormProps) => {
         year: 1990,
         month: 1,
         day: 1,
-        hour: 12,
-        minute: 0,
-        gender: 'Male' as Gender
+        hour: 0,
+        minute: 30, // Default to Zi
+        gender: 'Male' as Gender,
+        shiChenZhi: '子' // Track the branch character for internal logic if needed
     });
+
+    const shiChenOptions = [
+        { label: '子時 (23:00 - 01:00)', value: '子', hour: 0 },
+        { label: '丑時 (01:00 - 03:00)', value: '丑', hour: 2 },
+        { label: '寅時 (03:00 - 05:00)', value: '寅', hour: 4 },
+        { label: '卯時 (05:00 - 07:00)', value: '卯', hour: 6 },
+        { label: '辰時 (07:00 - 09:00)', value: '辰', hour: 8 },
+        { label: '巳時 (09:00 - 11:00)', value: '巳', hour: 10 },
+        { label: '午時 (11:00 - 13:00)', value: '午', hour: 12 },
+        { label: '未時 (13:00 - 15:00)', value: '未', hour: 14 },
+        { label: '申時 (15:00 - 17:00)', value: '申', hour: 16 },
+        { label: '酉時 (17:00 - 19:00)', value: '酉', hour: 18 },
+        { label: '戌時 (19:00 - 21:00)', value: '戌', hour: 20 },
+        { label: '亥時 (21:00 - 23:00)', value: '亥', hour: 22 },
+    ];
 
     // Prediction Logic
     const [showPrediction, setShowPrediction] = useState(false);
@@ -88,10 +104,23 @@ export const InputForm = ({ onSubmit }: InputFormProps) => {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: name === 'gender' ? value : parseInt(value)
-        }));
+
+        if (name === 'shiChen') {
+            const selected = shiChenOptions.find(opt => opt.value === value);
+            if (selected) {
+                setFormData(prev => ({
+                    ...prev,
+                    shiChenZhi: selected.value,
+                    hour: selected.hour,
+                    minute: 30 // Set strictly to middle of hour to avoid edge cases
+                }));
+            }
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: name === 'gender' ? value : parseInt(value)
+            }));
+        }
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -138,9 +167,17 @@ export const InputForm = ({ onSubmit }: InputFormProps) => {
                     <div className="flex justify-between mb-1">
                         <label className="text-sm text-slate-400">時間 & 性別</label>
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
-                        <input type="number" name="hour" placeholder="Hour" min="0" max="23" value={formData.hour} onChange={handleChange} className="bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-white text-sm" />
-                        <input type="number" name="minute" placeholder="Min" min="0" max="59" value={formData.minute} onChange={handleChange} className="bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-white text-sm" />
+                    <div className="grid grid-cols-2 gap-2">
+                        <select
+                            name="shiChen"
+                            value={formData.shiChenZhi}
+                            onChange={handleChange}
+                            className="bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-white text-sm"
+                        >
+                            {shiChenOptions.map(opt => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                        </select>
                         <select name="gender" value={formData.gender} onChange={handleChange} className="bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-white text-sm">
                             <option value="Male">男</option>
                             <option value="Female">女</option>
