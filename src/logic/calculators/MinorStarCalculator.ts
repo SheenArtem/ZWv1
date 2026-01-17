@@ -1,6 +1,27 @@
 // Help Types
 // (Removed unused BranchIndex)
 
+// Helper for reuse (Decade/Year stars)
+export const calculateLuYangTuoKuiYue = (stemIndex: number) => {
+    const stars: Record<string, number> = {};
+
+    // 1. Lucun, Qingyang, Tuoluo (Gan)
+    // Mapping: Jia(0)->Yin(2)...
+    const luCunMap = [2, 3, 5, 6, 5, 6, 8, 9, 11, 0];
+    const luCunPos = luCunMap[stemIndex];
+    stars['祿存'] = luCunPos;
+    stars['擎羊'] = (luCunPos + 1) % 12;
+    stars['陀羅'] = (luCunPos - 1 + 12) % 12;
+
+    // 2. Tian Kui, Tian Yue (Gan)
+    const kuiMap = [1, 0, 11, 11, 1, 0, 1, 6, 3, 3];
+    const yueMap = [7, 8, 9, 9, 7, 8, 7, 2, 5, 5];
+    stars['天魁'] = kuiMap[stemIndex];
+    stars['天鉞'] = yueMap[stemIndex];
+
+    return stars;
+};
+
 export const calculateMinorStars = (
     yearGanIndex: number,
     lunarMonth: number,
@@ -9,28 +30,9 @@ export const calculateMinorStars = (
 ): Record<string, number> => {
     const stars: Record<string, number> = {};
 
-    // 1. Lucun, Qingyang, Tuoluo (Year Gan)
-    // Mapping: Jia(0)->Yin(2)...
-    const luCunMap = [2, 3, 5, 6, 5, 6, 8, 9, 11, 0];
-    const luCunPos = luCunMap[yearGanIndex];
-    stars['祿存'] = luCunPos;
-    stars['擎羊'] = (luCunPos + 1) % 12;
-    stars['陀羅'] = (luCunPos - 1 + 12) % 12;
-
-    // 2. Tian Kui, Tian Yue (Year Gan)
-    // Kui=1,0,11,11,1,0,1,6,3,3
-    // Yue=7,8,9,9,7,8,7,2,5,5
-    const kuiMap = [1, 0, 11, 11, 1, 0, 1, 6, 3, 3];
-    const yueMap = [7, 8, 9, 9, 7, 8, 7, 2, 5, 5];
-    stars['天魁'] = kuiMap[yearGanIndex];
-    stars['天鉞'] = yueMap[yearGanIndex];
-    // Wait, previous file had Kui=yueMap? 
-    // "Jia Wu Geng Niu(Chou) Yang(Wei)". 
-    // Standard: Gui Ren (Noble): Day Noble (Kui), Night Noble (Yue).
-    // Jia: Chou(1) is Kui? Wei(7) is Yue?
-    // Let's stick to standard names relative to positions.
-    // Revised map from previous step:
-    // kuiMap = [1...] which is Chou. So that's Kui.
+    // 1 & 2. Lu Yang Tuo Kui Yue
+    const baseStars = calculateLuYangTuoKuiYue(yearGanIndex);
+    Object.assign(stars, baseStars);
 
     // 3. Zuo Fu, You Bi (Lunar Month)
     stars['左輔'] = (4 + (lunarMonth - 1)) % 12;

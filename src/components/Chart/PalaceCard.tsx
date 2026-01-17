@@ -122,6 +122,11 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
         if (star.scope === 'decade' && !isPredictionMode) {
             return null;
         }
+        // HIDE Year Stars if not in Year/Month Mode
+        const isYearMode = ['year', 'month'].includes(displayMode || '');
+        if (star.scope === 'year' && !isYearMode) {
+            return null;
+        }
 
         // Color Logic
         let textColor = 'text-slate-200'; // Fallback
@@ -130,6 +135,8 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
             textColor = 'text-blue-300';
         } else if (star.scope === 'decade') {
             textColor = 'text-indigo-400';
+        } else if (star.scope === 'year') {
+            textColor = 'text-amber-500';
         } else {
             // Basic/Birth Stars (Good/Aux/etc) -> Use Red-500 (Life Palace Color) per user request
             // Note: User specifically asked for "Basic Lu Cun", but usually this implies the whole set or just Lu Cun? 
@@ -206,11 +213,12 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
                 {/* Minor Stars (Right) */}
                 <div className="w-[60%] flex flex-row flex-wrap pt-3 pr-0.5 justify-end content-start gap-x-0.5 z-0 overflow-y-auto overflow-x-hidden scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                     {data.minorStars.map(s => {
-                        // Special Handling for Decade Lu Cun Name
-                        // If scope is decade, append (限)
+                        // Special Handling for Suffixes
                         let displayName = s.name;
                         if (s.scope === 'decade') {
                             displayName = `${s.name}(限)`;
+                        } else if (s.scope === 'year') {
+                            displayName = `${s.name}(流)`;
                         }
                         return <MinorStarItem key={s.name + (s.scope || '')} star={{ ...s, name: displayName }} />;
                     })}

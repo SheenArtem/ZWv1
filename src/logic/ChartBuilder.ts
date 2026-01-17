@@ -6,7 +6,7 @@ import { getPalaceStemIndices } from './calculators/SexagenaryCalculator';
 import { getBureau } from './calculators/FiveElements';
 import { getZiWeiIndex, calculateMajorStars } from './calculators/StarCalculator';
 import { calculateLiuNian, calculateLiuYue } from './calculators/TimeCalculator';
-import { calculateMinorStars } from './calculators/MinorStarCalculator';
+import { calculateMinorStars, calculateLuYangTuoKuiYue } from './calculators/MinorStarCalculator';
 import { calculateAuxiliaryStars } from './calculators/AuxiliaryStarCalculator';
 import { calculateTwelveGods } from './calculators/TwelveGodsCalculator';
 import { getBrightness } from './calculators/StarBrightnessMap';
@@ -142,6 +142,9 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
     let liuYueSiHuaSummary: string | undefined;
     let lnSiHuaMap: Record<string, StarMutagen> = {};
     let lySiHuaMap: Record<string, StarMutagen> = {};
+    // Time-Based Stars Maps
+    let yearStarMap: Record<string, number> = {};
+    let decadeStarMap: Record<string, number> = {};
 
     // Prediction Display Info
     let predictionDisplayDate: string | undefined;
@@ -213,6 +216,10 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         } catch (e) {
             console.error(e);
         }
+
+
+        // Calculate Year Stars (Lu Yang Tuo Kui Yue)
+        yearStarMap = calculateLuYangTuoKuiYue(pYearGanIndex);
     }
 
     // Da Xian (Decade) Logic
@@ -220,6 +227,7 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
     let dxSiHuaMap: Record<string, StarMutagen> = {};
     let daXianSiHuaSummary: string | undefined;
     let daXianDateRange: string | undefined;
+
 
     if (predictionDate) {
         // 1. Calculate Current Age (Virtual Age / Sui Ci)
@@ -307,6 +315,9 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         // Jia(0)->Yin(2)...
         const luCunMap = [2, 3, 5, 6, 5, 6, 8, 9, 11, 0];
         decadeLuCunIndex = luCunMap[decadeStem];
+
+        // Calculate Decade Stars (Lu Yang Tuo Kui Yue)
+        decadeStarMap = calculateLuYangTuoKuiYue(decadeStem);
 
         // Calculate Decade Doctor 12 (Bo Shi)
         // Direction: Yang Male/Yin Female = CW, Yin Male/Yang Female = CCW
@@ -447,19 +458,35 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         }
 
         // const gods = godsCalc.getGods(b); // Moved logic out
+        // Inject Year Stars
+        for (const [starName, starBranch] of Object.entries(yearStarMap)) {
+            if (starBranch === b) {
+                cellMinorStars.push({
+                    name: starName,
+                    type: 'minor',
+                    scope: 'year',
+                    brightness: '',
+                });
+            }
+        }
+
+        // Inject Decade Stars
+        for (const [starName, starBranch] of Object.entries(decadeStarMap)) {
+            if (starBranch === b) {
+                cellMinorStars.push({
+                    name: starName,
+                    type: 'minor',
+                    scope: 'decade',
+                    brightness: '',
+                });
+            }
+        }
+
         const gods = godsCalc.getGods(b);
         const limits = limitsCalc.getLimits(b);
         const ages = calculateAgesInPalace(b, mingIndex, input.gender, yearGanIndex, yearZhiIndex);
 
-        // Inject Decade Lu Cun if applicable
-        if (b === decadeLuCunIndex) {
-            cellMinorStars.push({
-                name: '祿存',
-                type: 'minor',
-                scope: 'decade', // Mark as Decade Star
-                brightness: '旺', // Lu Cun is always bright?
-            });
-        }
+
 
         palaces.push({
             branchIndex: b,
@@ -502,7 +529,7 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
 
         // Display Info
         birthDate: `${input.year}年${input.month}月${input.day}日 ${ZHI_CHARS[lunarHourIndex]}時`,
-        lunarDate: `${lunar.lunarYear}年${lunar.lunarMonth}月${lunar.lunarDay}日`,
+        lunarDate: `${lunar.lunarYear}年${lunar.lunarMonth}月${lunar.isLeap ? '(閏)' : ''}${lunar.lunarDay}日`,
         baZi: lunar.eightChar,
         zodiac: `${zodiacChar}${zodiacAnimal}`, // e.g. 辰龍
         gender: input.gender,
