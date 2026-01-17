@@ -188,12 +188,12 @@ export const PalaceCard: FC<PalaceCardProps> = ({ data, className, isLiuNian, is
             )}
         >
             {/* Corner Badges */}
-            {isLiuNian && (displayMode === 'all' || displayMode === 'year') && (
+            {isLiuNian && (displayMode === 'all') && (
                 <div className={clsx("absolute top-0 right-0 bg-amber-600 px-1 text-white font-bold z-20", dynamicTextSm)}>
                     流年
                 </div>
             )}
-            {isLiuYue && (displayMode === 'all' || displayMode === 'month') && (
+            {isLiuYue && (displayMode === 'all') && (
                 <div className={clsx("absolute top-0 right-8 bg-emerald-600 px-1 text-white font-bold z-20", dynamicTextSm)}>
                     流月
                 </div>
