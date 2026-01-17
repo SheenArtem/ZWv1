@@ -98,6 +98,10 @@ export const generateMarkdown = (chart: ChartData, mode: DisplayMode): string =>
 
 const formatStar = (star: Star, mode: DisplayMode): string => {
     let text = star.name;
+    // Suffixes for Time-Based Stars
+    if (star.scope === 'decade') text += '(限)';
+    if (star.scope === 'year') text += '(流)';
+
     if (star.brightness) text += `(${star.brightness})`;
 
     // Always show Birth Si Hua
