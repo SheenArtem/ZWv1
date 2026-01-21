@@ -112,14 +112,24 @@ export const InputForm = ({ onSubmit }: InputFormProps) => {
                     ...prev,
                     shiChenZhi: selected.value,
                     hour: selected.hour,
-                    minute: 30 // Set strictly to middle of hour to avoid edge cases
+                    minute: 30
                 }));
             }
         } else {
-            setFormData(prev => ({
-                ...prev,
-                [name]: name === 'gender' ? value : parseInt(value)
-            }));
+            const newValue = name === 'gender' ? value : parseInt(value);
+
+            setFormData(prev => {
+                const updated = { ...prev, [name]: newValue };
+
+                // Clamp Day if Month/Year changes
+                if (name === 'month' || name === 'year') {
+                    const maxDays = new Date(updated.year, updated.month, 0).getDate();
+                    if (updated.day > maxDays) {
+                        updated.day = maxDays;
+                    }
+                }
+                return updated;
+            });
         }
     };
 
@@ -157,8 +167,20 @@ export const InputForm = ({ onSubmit }: InputFormProps) => {
                     </div>
                     <div className="grid grid-cols-3 gap-2">
                         <input type="number" name="year" placeholder="Year" value={formData.year} onChange={handleChange} className="bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-white text-sm" />
-                        <input type="number" name="month" placeholder="Month" min="1" max="12" value={formData.month} onChange={handleChange} className="bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-white text-sm" />
-                        <input type="number" name="day" placeholder="Day" min="1" max="31" value={formData.day} onChange={handleChange} className="bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-white text-sm" />
+
+                        {/* Month Select */}
+                        <select name="month" value={formData.month} onChange={handleChange} className="bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-white text-sm">
+                            {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                                <option key={m} value={m}>{m}月</option>
+                            ))}
+                        </select>
+
+                        {/* Day Select */}
+                        <select name="day" value={formData.day} onChange={handleChange} className="bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-white text-sm">
+                            {Array.from({ length: new Date(formData.year, formData.month, 0).getDate() }, (_, i) => i + 1).map(d => (
+                                <option key={d} value={d}>{d}日</option>
+                            ))}
+                        </select>
                     </div>
                 </div>
 

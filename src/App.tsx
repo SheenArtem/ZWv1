@@ -14,6 +14,8 @@ function App() {
     const [activeTab, setActiveTab] = useState<'birth' | 'decade' | 'year' | 'month'>('birth');
     const [selectedPalace, setSelectedPalace] = useState<PalaceData | null>(null);
 
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
     const handleGenerate = (details: BirthDetails, predictionDate?: Date) => {
         try {
             // Generate the chart using logic engine
@@ -24,6 +26,7 @@ function App() {
             interpreter.enrichChartWithDescriptions();
 
             setChartData(data);
+            setIsMobileMenuOpen(false); // Close mobile menu on generate
         } catch (error) {
             alert(`❌ ERROR in generateChart:\n${error}`);
             console.error('Error generating chart:', error);
@@ -31,11 +34,34 @@ function App() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white flex flex-col h-screen overflow-hidden">
+        <div className="min-h-screen bg-slate-950 text-white flex flex-col h-screen overflow-hidden relative">
+            {/* Mobile Toggle Button */}
+            <button
+                className="md:hidden fixed top-2 right-2 z-50 p-2 bg-purple-600/90 rounded-full shadow-lg text-white font-bold leading-none border border-purple-400 hover:bg-purple-500 transition-colors"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+                {isMobileMenuOpen ? '✕' : '⚙️'}
+            </button>
+
+            {/* Mobile Backdrop */}
+            {isMobileMenuOpen && (
+                <div
+                    className="fixed inset-0 bg-black/60 z-30 md:hidden backdrop-blur-sm transition-opacity"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                />
+            )}
+
             {/* Main Content Area */}
-            <div className="flex flex-1 overflow-hidden">
-                {/* Left Sidebar: Input Form */}
-                <aside className="w-[400px] bg-slate-900 border-r border-slate-800 overflow-y-auto shrink-0 hidden md:flex md:flex-col z-10 p-4">
+            <div className="flex flex-1 overflow-hidden relative">
+                {/* Left Sidebar: Input Form (Drawer on Mobile) */}
+                <aside className={`
+                    absolute md:static inset-y-0 left-0 z-40
+                    w-[85%] max-w-[400px] md:w-[400px]
+                    bg-slate-900/95 md:bg-slate-900 border-r border-slate-800
+                    overflow-y-auto shrink-0 flex flex-col p-4
+                    transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none
+                    ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+                `}>
                     <InputForm onSubmit={handleGenerate} />
 
                     {/* View Mode Switching Controls */}
@@ -104,7 +130,7 @@ function App() {
                             </button>
                         )}
                         <h1 className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
-                            紫微斗數 v3.5.9
+                            紫微斗數 v3.6.0
                         </h1>
                     </div>
                 </aside>
