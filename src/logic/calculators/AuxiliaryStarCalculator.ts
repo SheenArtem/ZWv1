@@ -73,7 +73,8 @@ export const calculateAuxiliaryStars = (
     // 11. Tian Guan (天官), Tian Fu (天福) - Year Gan
     const tianGuanMap = [7, 4, 5, 2, 3, 9, 11, 9, 10, 6];
     stars['天官'] = tianGuanMap[yearGanIndex];
-    const tianFuMap = [9, 8, 0, 11, 3, 5, 6, 5, 6, 5];
+    // 天福 by year-stem. 己(5) corrected 巳→寅 to match standard (verified vs iztro across all 10 stems).
+    const tianFuMap = [9, 8, 0, 11, 3, 2, 6, 5, 6, 5];
     stars['天福'] = tianFuMap[yearGanIndex];
 
     // 12. Tian Ku (天哭), Tian Xu (天虛) - Year Branch
@@ -112,13 +113,10 @@ export const calculateAuxiliaryStars = (
     // Gui (9) is Yin Year. Ref has Jie Kong at Chou (1) [Yin Pos]. Kong Wang at Zi (0) [Yang Pos].
     // My jkStart for Gui is 0 (Zi) [Yang Pos]. jkNext is 1 (Chou) [Yin Pos].
 
-    if (yearGanIndex % 2 === 0) { // Yang Stem (Jia, Bing...) -> Yang Year
-        stars['截空'] = jkStart;
-        stars['空亡'] = jkNext;
-    } else { // Yin Stem (Yi, Ding...) -> Yin Year
-        stars['截空'] = jkNext;
-        stars['空亡'] = jkStart;
-    }
+    // 截路空亡 pair by year-stem: 截路 always on the yang branch (jkStart), 空亡 on the yin branch (jkNext),
+    // regardless of stem parity (verified vs iztro for all 10 stems). The previous yin-stem swap was wrong.
+    stars['截空'] = jkStart;
+    stars['空亡'] = jkNext;
 
     // 15. Jie Shen (解神) - Month based
     const jsMap = [8, 8, 10, 10, 0, 0, 2, 2, 4, 4, 6, 6];
@@ -138,16 +136,11 @@ export const calculateAuxiliaryStars = (
     stars['封誥'] = (2 + lunarHourIndex) % 12;
     stars['台輔'] = (6 + lunarHourIndex) % 12;
 
-    // D. Tian De (天德) - Year Branch (Star)
-    const tianDeStarMap = [9, 6, 7, 2, 9, 10, 11, 0, 1, 5, 2, 8];
-    stars['天德'] = tianDeStarMap[yearBranchIndex];
+    // D. Tian De (天德) - Year Branch. Linear: 子→酉. (verified vs iztro across all 12 branches)
+    stars['天德'] = (yearBranchIndex + 9) % 12;
 
-    // E. Yue De (月德) 
-    // Force match User Ref for Hai Year -> Chen(4)?
-    if ([11, 3, 7].includes(yearBranchIndex)) stars['月德'] = 4; // Chen 
-    else if ([2, 6, 10].includes(yearBranchIndex)) stars['月德'] = 5;
-    else if ([5, 9, 1].includes(yearBranchIndex)) stars['月德'] = 6;
-    else stars['月德'] = 7;
+    // E. Yue De (月德) - Year Branch. Linear: 子→巳. (verified vs iztro across all 12 branches)
+    stars['月德'] = (yearBranchIndex + 5) % 12;
 
     // F. Tian Shi (天使), Tian Shang (天傷)
     stars['天傷'] = (mingIndex + 5) % 12;

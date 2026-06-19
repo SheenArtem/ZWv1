@@ -11,7 +11,8 @@ export interface BirthDetails {
 
 export interface LunarDetails {
     lunarYear: number;
-    lunarMonth: number;
+    lunarMonth: number;       // true lunar month for display (1-12)
+    effectiveMonth: number;   // month number used for 紫微 安命/月系星 (leap-month convention applied)
     lunarDay: number;
     isLeap: boolean;
     ganZhiYear: string;

@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react';
 import { BirthDetails, Gender } from '../logic/models/BirthDetails';
+import { ChartConventions, DEFAULT_CONVENTIONS } from '../logic/models/ChartConventions';
 import LunarJS from 'lunar-javascript';
 const { Lunar } = LunarJS;
 
 interface InputFormProps {
-    onSubmit: (details: BirthDetails, predictionDate?: Date) => void;
+    onSubmit: (details: BirthDetails, predictionDate?: Date, conventions?: ChartConventions) => void;
 }
 
 export const InputForm = ({ onSubmit }: InputFormProps) => {
@@ -14,25 +15,23 @@ export const InputForm = ({ onSubmit }: InputFormProps) => {
         month: 1,
         day: 1,
         hour: 0,
-        minute: 30, // Default to Zi
+        minute: 0,
         gender: 'Male' as Gender,
-        shiChenZhi: '子' // Track the branch character for internal logic if needed
     });
 
-    const shiChenOptions = [
-        { label: '子時 (23:00 - 01:00)', value: '子', hour: 0 },
-        { label: '丑時 (01:00 - 03:00)', value: '丑', hour: 2 },
-        { label: '寅時 (03:00 - 05:00)', value: '寅', hour: 4 },
-        { label: '卯時 (05:00 - 07:00)', value: '卯', hour: 6 },
-        { label: '辰時 (07:00 - 09:00)', value: '辰', hour: 8 },
-        { label: '巳時 (09:00 - 11:00)', value: '巳', hour: 10 },
-        { label: '午時 (11:00 - 13:00)', value: '午', hour: 12 },
-        { label: '未時 (13:00 - 15:00)', value: '未', hour: 14 },
-        { label: '申時 (15:00 - 17:00)', value: '申', hour: 16 },
-        { label: '酉時 (17:00 - 19:00)', value: '酉', hour: 18 },
-        { label: '戌時 (19:00 - 21:00)', value: '戌', hour: 20 },
-        { label: '亥時 (21:00 - 23:00)', value: '亥', hour: 22 },
-    ];
+    // 流派慣例 (school conventions)
+    const [conventions, setConventions] = useState<ChartConventions>(DEFAULT_CONVENTIONS);
+    const [showConventions, setShowConventions] = useState(false);
+
+    // Derive the 時辰 (hour branch) label from an exact clock hour (0-23).
+    // 子=23–01, 丑=01–03 ... (子時 spans midnight; 23:xx = 晚子, 00:xx = 早子).
+    const SHICHEN = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+    const shiChenLabel = (hour: number): string => {
+        const idx = Math.floor((hour + 1) / 2) % 12;
+        const zhi = SHICHEN[idx];
+        if (idx === 0) return hour === 23 ? `${zhi}時 (晚子)` : `${zhi}時 (早子)`;
+        return `${zhi}時`;
+    };
 
     // Prediction Logic
     const [showPrediction, setShowPrediction] = useState(false);
@@ -105,17 +104,7 @@ export const InputForm = ({ onSubmit }: InputFormProps) => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
 
-        if (name === 'shiChen') {
-            const selected = shiChenOptions.find(opt => opt.value === value);
-            if (selected) {
-                setFormData(prev => ({
-                    ...prev,
-                    shiChenZhi: selected.value,
-                    hour: selected.hour,
-                    minute: 30
-                }));
-            }
-        } else {
+        {
             const newValue = name === 'gender' ? value : parseInt(value);
 
             setFormData(prev => {
@@ -151,7 +140,7 @@ export const InputForm = ({ onSubmit }: InputFormProps) => {
 
         onSubmit({
             ...formData,
-        }, pDate);
+        }, pDate, conventions);
     };
 
     return (
@@ -187,24 +176,29 @@ export const InputForm = ({ onSubmit }: InputFormProps) => {
                 {/* Birth Inputs: Time & Gender */}
                 <div>
                     <div className="flex justify-between mb-1">
-                        <label className="text-sm text-slate-400">時間 & 性別</label>
+                        <label className="text-sm text-slate-400">出生時間 (24 小時制) & 性別</label>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
-                        <select
-                            name="shiChen"
-                            value={formData.shiChenZhi}
-                            onChange={handleChange}
-                            className="bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-white text-sm"
-                        >
-                            {shiChenOptions.map(opt => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    <div className="grid grid-cols-3 gap-2">
+                        {/* Hour (0-23) with derived 時辰 */}
+                        <select name="hour" value={formData.hour} onChange={handleChange} className="bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-white text-sm">
+                            {Array.from({ length: 24 }, (_, h) => h).map(h => (
+                                <option key={h} value={h}>{String(h).padStart(2, '0')} 時</option>
                             ))}
                         </select>
+                        {/* Minute (0-59) */}
+                        <input
+                            type="number" name="minute" min={0} max={59} value={formData.minute} onChange={handleChange}
+                            className="bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-white text-sm" placeholder="分"
+                        />
                         <select name="gender" value={formData.gender} onChange={handleChange} className="bg-slate-900 border border-slate-600 rounded px-2 py-1.5 text-white text-sm">
                             <option value="Male">男</option>
                             <option value="Female">女</option>
                         </select>
                     </div>
+                    <p className="text-[11px] text-slate-500 mt-1">
+                        對應時辰：<span className="text-slate-300">{shiChenLabel(formData.hour)}</span>
+                        <span className="text-slate-600"> · 23:xx 為晚子、00:xx 為早子</span>
+                    </p>
                 </div>
 
                 <div className="border-t border-slate-700 my-2 pt-2">
@@ -245,6 +239,88 @@ export const InputForm = ({ onSubmit }: InputFormProps) => {
                                         <option key={opt.value} value={opt.value}>{opt.label}</option>
                                     ))}
                                 </select>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* 流派設定 (School Conventions) */}
+                <div className="border-t border-slate-700 my-2 pt-2">
+                    <button
+                        type="button"
+                        onClick={() => setShowConventions(!showConventions)}
+                        className="flex items-center justify-between w-full text-sm text-slate-300 hover:text-white transition-colors mb-2"
+                    >
+                        <span className="font-bold text-teal-400">流派設定 <span className="text-xs text-slate-500 font-normal">(進階)</span></span>
+                        <span>{showConventions ? '−' : '+'}</span>
+                    </button>
+
+                    {showConventions && (
+                        <div className="space-y-3 animate-fade-in bg-slate-900/50 p-2 rounded border border-slate-700">
+                            {/* 晚子時 */}
+                            <div>
+                                <label className="block text-sm text-teal-300 mb-1">晚子時換日 (23:00–24:00)</label>
+                                <select
+                                    value={conventions.lateZi}
+                                    onChange={(e) => setConventions(c => ({ ...c, lateZi: e.target.value as ChartConventions['lateZi'] }))}
+                                    className="w-full bg-slate-900 border border-teal-900/50 rounded px-2 py-1.5 text-white text-sm focus:border-teal-500"
+                                >
+                                    <option value="noSwitch">晚子用本日 (傳統夜子時，預設)</option>
+                                    <option value="switchDay">晚子全換日 (當次日子時)</option>
+                                </select>
+                                <p className="text-[11px] text-slate-500 mt-1 leading-snug">
+                                    換日使農曆日±1 → 紫微主星整盤移位（跨月底連命宮亦移）；時支仍為子，時系星不變。亦影響八字日柱。「本日」≈夜子不換日（施大堯主張紫微不需換日）；「全換日」≈子初一律換日。此議題各派無定論、無實證。
+                                </p>
+                            </div>
+
+                            {/* 閏月安命 */}
+                            <div>
+                                <label className="block text-sm text-teal-300 mb-1">閏月安命</label>
+                                <select
+                                    value={conventions.leapMonth}
+                                    onChange={(e) => setConventions(c => ({ ...c, leapMonth: e.target.value as ChartConventions['leapMonth'] }))}
+                                    className="w-full bg-slate-900 border border-teal-900/50 rounded px-2 py-1.5 text-white text-sm focus:border-teal-500"
+                                >
+                                    <option value="split">上半月當本月、下半月當下月 (預設)</option>
+                                    <option value="thisMonth">閏月全當本月</option>
+                                    <option value="nextMonth">閏月全當下月</option>
+                                </select>
+                                <p className="text-[11px] text-slate-500 mt-1 leading-snug">
+                                    僅影響閏月出生者。「上下半月」以 15 日分界，為現代軟體最常見預設（與 iztro 一致）；「全當下月」有《全書》古典依據。閏月下半出生者建議前後兩月命盤比對定盤。八字按節氣，不受此影響。
+                                </p>
+                            </div>
+
+                            {/* 庚干四化 */}
+                            <div>
+                                <label className="block text-sm text-teal-300 mb-1">庚干四化 (祿太陽·權武曲)</label>
+                                <select
+                                    value={conventions.gengSihua}
+                                    onChange={(e) => setConventions(c => ({ ...c, gengSihua: e.target.value as ChartConventions['gengSihua'] }))}
+                                    className="w-full bg-slate-900 border border-teal-900/50 rounded px-2 py-1.5 text-white text-sm focus:border-teal-500"
+                                >
+                                    <option value="zhongzhou">太陰化科、天同化忌 (中州派，預設)</option>
+                                    <option value="tianfu">天府化科、天同化忌 (古早派)</option>
+                                    <option value="tianxiang">天同化科、天相化忌 (官非派)</option>
+                                </select>
+                                <p className="text-[11px] text-slate-500 mt-1 leading-snug">
+                                    庚干公案：科為太陰或天府、忌為天同或天相。中州派為最多人用、iztro 預設。
+                                </p>
+                            </div>
+
+                            {/* 壬干四化 */}
+                            <div>
+                                <label className="block text-sm text-teal-300 mb-1">壬干四化 (祿天梁·權紫微·忌武曲)</label>
+                                <select
+                                    value={conventions.renSihua}
+                                    onChange={(e) => setConventions(c => ({ ...c, renSihua: e.target.value as ChartConventions['renSihua'] }))}
+                                    className="w-full bg-slate-900 border border-teal-900/50 rounded px-2 py-1.5 text-white text-sm focus:border-teal-500"
+                                >
+                                    <option value="zuofu">左輔化科 (主流，預設)</option>
+                                    <option value="tianfu">天府化科 (極少數)</option>
+                                </select>
+                                <p className="text-[11px] text-slate-500 mt-1 leading-snug">
+                                    壬干科星：主流定論為左輔化科；天府化科為極少數說法。
+                                </p>
                             </div>
                         </div>
                     )}

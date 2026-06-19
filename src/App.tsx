@@ -3,6 +3,7 @@ import { InputForm } from './components/InputForm';
 import { ChartGrid } from './components/Chart/ChartGrid';
 
 import { BirthDetails } from './logic/models/BirthDetails';
+import { ChartConventions, DEFAULT_CONVENTIONS } from './logic/models/ChartConventions';
 import { ChartData, PalaceData } from './logic/models/ChartData';
 import { generateChart } from './logic/ChartBuilder';
 import { PalaceAnalysisModal } from './components/Modals/PalaceAnalysisModal';
@@ -16,10 +17,10 @@ function App() {
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    const handleGenerate = (details: BirthDetails, predictionDate?: Date) => {
+    const handleGenerate = (details: BirthDetails, predictionDate?: Date, conventions: ChartConventions = DEFAULT_CONVENTIONS) => {
         try {
             // Generate the chart using logic engine
-            const data = generateChart(details, predictionDate);
+            const data = generateChart(details, predictionDate, conventions);
 
             // Enrich with Analysis Text
             const interpreter = new Interpreter(data);

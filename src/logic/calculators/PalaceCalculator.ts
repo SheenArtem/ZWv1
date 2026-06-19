@@ -11,7 +11,7 @@ export interface PalacePositions {
 }
 
 export const calculatePalaces = (lunar: LunarDetails): PalacePositions => {
-    const month = lunar.lunarMonth; // 1-12
+    const month = lunar.effectiveMonth; // leap-month convention applied (see ChartConventions)
     // We assume lunar.timeZhi is the Branch Name. We need its index.
     // We need to robustly map timeZhi to number.
     // Let's assume input is valid.

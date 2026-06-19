@@ -1,5 +1,6 @@
 import { BirthDetails } from './models/BirthDetails';
 import { ChartData, PalaceData, Star, StarMutagen } from './models/ChartData';
+import { ChartConventions, DEFAULT_CONVENTIONS } from './models/ChartConventions';
 import { convertToLunar } from './converters/LunarConverter';
 import { calculatePalaces } from './calculators/PalaceCalculator';
 import { getPalaceStemIndices } from './calculators/SexagenaryCalculator';
@@ -69,9 +70,16 @@ const ZODIAC_MAP: Record<string, string> = {
     '申': '猴', '酉': '雞', '戌': '狗', '亥': '豬'
 };
 
-export const generateChart = (input: BirthDetails, predictionDate?: Date): ChartData => {
-    // 1. Convert to Lunar
-    const lunar = convertToLunar(input);
+export const generateChart = (
+    input: BirthDetails,
+    predictionDate?: Date,
+    conventions: ChartConventions = DEFAULT_CONVENTIONS
+): ChartData => {
+    // 1. Convert to Lunar (applies 晚子時 / 閏月 conventions)
+    const lunar = convertToLunar(input, conventions);
+
+    // 四化流派 (applied to natal + 大限/流年/流月 alike)
+    const sihuaSchool = { geng: conventions.gengSihua, ren: conventions.renSihua };
 
     // 2. Palace Positions
     const { mingIndex } = calculatePalaces(lunar);
@@ -104,25 +112,25 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
     }
     const lunarHourIndex = Math.floor((input.hour + 1) / 2) % 12;
 
-    const minorStarsMap = calculateMinorStars(yearGanIndex, lunar.lunarMonth, lunarHourIndex, yearZhiIndex);
+    const minorStarsMap = calculateMinorStars(yearGanIndex, lunar.effectiveMonth, lunarHourIndex, yearZhiIndex);
 
     // Calculate Ming/Shen Indices for Aux Stars
     const mingBranchIndex = mingIndex;
     let shenBranchIndex = 0;
 
-    shenBranchIndex = (2 + (lunar.lunarMonth - 1) + lunarHourIndex) % 12;
+    shenBranchIndex = (2 + (lunar.effectiveMonth - 1) + lunarHourIndex) % 12;
 
     const auxStarsMap = calculateAuxiliaryStars(
         yearGanIndex,
         yearZhiIndex,
-        lunar.lunarMonth,
+        lunar.effectiveMonth,
         lunarHourIndex,
         lunar.lunarDay,
         mingBranchIndex,
         shenBranchIndex
     );
 
-    const siHuaMap = calculateSiHua(yearGanIndex);
+    const siHuaMap = calculateSiHua(yearGanIndex, sihuaSchool);
     const siHuaSummary = formatSiHua(siHuaMap);
 
     // 5. Gods - Moved to before Assemble loop
@@ -195,14 +203,14 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         if (pYearGanIndex < 0) pYearGanIndex += 10;
 
         try {
-            lnSiHuaMap = calculateSiHua(pYearGanIndex);
+            lnSiHuaMap = calculateSiHua(pYearGanIndex, sihuaSchool);
             liuNianSiHuaSummary = formatSiHua(lnSiHuaMap);
         } catch (e) {
             console.error(e);
         }
 
         // Liu Yue
-        const birthMonth = lunar.lunarMonth;
+        const birthMonth = lunar.effectiveMonth;
         const pMonth = Math.abs(pLunar.getMonth());
         liuYueIndex = calculateLiuYue(liuNianIndex, birthMonth, lunarHourIndex, pMonth);
 
@@ -211,7 +219,7 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
         let pMonthGanIndex = (startMonthStem + (pMonth - 1)) % 10;
 
         try {
-            lySiHuaMap = calculateSiHua(pMonthGanIndex);
+            lySiHuaMap = calculateSiHua(pMonthGanIndex, sihuaSchool);
             liuYueSiHuaSummary = formatSiHua(lySiHuaMap);
         } catch (e) {
             console.error(e);
@@ -287,7 +295,7 @@ export const generateChart = (input: BirthDetails, predictionDate?: Date): Chart
             const decadeStem = (tigerStem + stemOffset) % 10;
 
             try {
-                dxSiHuaMap = calculateSiHua(decadeStem);
+                dxSiHuaMap = calculateSiHua(decadeStem, sihuaSchool);
                 daXianSiHuaSummary = formatSiHua(dxSiHuaMap);
             } catch (e) { console.error(e); }
         }
