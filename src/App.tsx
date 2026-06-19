@@ -5,13 +5,18 @@ import { ChartGrid } from './components/Chart/ChartGrid';
 import { BirthDetails } from './logic/models/BirthDetails';
 import { ChartConventions, DEFAULT_CONVENTIONS } from './logic/models/ChartConventions';
 import { ChartData, PalaceData } from './logic/models/ChartData';
+import { BaziChartData } from './logic/models/BaziChartData';
 import { generateChart } from './logic/ChartBuilder';
+import { generateBaziChart } from './logic/bazi/BaziBuilder';
+import { BaziBoard } from './components/Bazi/BaziBoard';
 import { PalaceAnalysisModal } from './components/Modals/PalaceAnalysisModal';
 import { Interpreter } from './logic/analysis/Interpreter';
 import { generateMarkdown } from './logic/utils/markdownGenerator';
 
 function App() {
     const [chartData, setChartData] = useState<ChartData | null>(null);
+    const [baziData, setBaziData] = useState<BaziChartData | null>(null);
+    const [system, setSystem] = useState<'ziwei' | 'bazi'>('ziwei');
     const [activeTab, setActiveTab] = useState<'birth' | 'decade' | 'year' | 'month'>('birth');
     const [selectedPalace, setSelectedPalace] = useState<PalaceData | null>(null);
 
@@ -27,6 +32,7 @@ function App() {
             interpreter.enrichChartWithDescriptions();
 
             setChartData(data);
+            setBaziData(generateBaziChart(details, conventions));
             setIsMobileMenuOpen(false); // Close mobile menu on generate
         } catch (error) {
             alert(`❌ ERROR in generateChart:\n${error}`);
@@ -65,8 +71,29 @@ function App() {
                 `}>
                     <InputForm onSubmit={handleGenerate} />
 
-                    {/* View Mode Switching Controls */}
+                    {/* System Switch: 紫微 / 八字 */}
                     {chartData && (
+                        <div className="mt-4 pt-4 border-t border-slate-800 animate-fade-in">
+                            <p className="text-sm text-slate-400 mb-2 font-bold">命盤系統</p>
+                            <div className="grid grid-cols-2 gap-2">
+                                {(['ziwei', 'bazi'] as const).map(sys => (
+                                    <button
+                                        key={sys}
+                                        onClick={() => setSystem(sys)}
+                                        className={`py-2 px-3 rounded text-sm font-bold transition-all border ${system === sys
+                                            ? 'bg-indigo-600 text-white border-indigo-500 shadow-md transform scale-[1.02]'
+                                            : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200 hover:bg-slate-700'
+                                            }`}
+                                    >
+                                        {sys === 'ziwei' ? '紫微斗數' : '八字'}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* View Mode Switching Controls (紫微 only) */}
+                    {chartData && system === 'ziwei' && (
                         <div className="mt-4 pt-4 border-t border-slate-800 animate-fade-in">
                             <p className="text-sm text-slate-400 mb-2 font-bold">顯示模式</p>
                             <div className="grid grid-cols-2 gap-2">
@@ -148,12 +175,16 @@ function App() {
                         </div>
                     ) : (
                         <div className="w-full h-full animate-fade-in">
-                            <ChartGrid
-                                chart={chartData}
-                                displayMode={activeTab}
-                                onPalaceClick={setSelectedPalace}
-                                selectedPalaceId={selectedPalace?.palaceName}
-                            />
+                            {system === 'bazi' && baziData ? (
+                                <BaziBoard bazi={baziData} />
+                            ) : (
+                                <ChartGrid
+                                    chart={chartData}
+                                    displayMode={activeTab}
+                                    onPalaceClick={setSelectedPalace}
+                                    selectedPalaceId={selectedPalace?.palaceName}
+                                />
+                            )}
                         </div>
                     )}
                 </main>
