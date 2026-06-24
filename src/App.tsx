@@ -11,7 +11,7 @@ import { generateBaziChart } from './logic/bazi/BaziBuilder';
 import { BaziBoard } from './components/Bazi/BaziBoard';
 import { PalaceAnalysisModal } from './components/Modals/PalaceAnalysisModal';
 import { Interpreter } from './logic/analysis/Interpreter';
-import { generateMarkdown } from './logic/utils/markdownGenerator';
+import { generateFullMarkdown } from './logic/utils/markdownGenerator';
 
 function App() {
     const [chartData, setChartData] = useState<ChartData | null>(null);
@@ -148,13 +148,13 @@ function App() {
                         {chartData && (
                             <button
                                 onClick={() => {
-                                    const md = generateMarkdown(chartData, activeTab);
+                                    const md = generateFullMarkdown(chartData);
                                     navigator.clipboard.writeText(md);
-                                    alert('Markdown Copied (' + activeTab + ' mode');
+                                    alert('完整命盤資料已複製 (本命/大限/流年/流月)');
                                 }}
                                 className="w-full mb-4 py-2 px-3 rounded text-sm font-bold bg-slate-800 text-slate-400 border border-slate-700 hover:text-white hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
                             >
-                                📋 複製 Markdown
+                                📋 複製完整命盤資料
                             </button>
                         )}
                         <h1 className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
