@@ -1,4 +1,6 @@
 import { BaziChartData, BaziPillar } from '../../logic/models/BaziChartData';
+import { BAZI_SCHOOL } from '../../logic/bazi/school';
+import { generateBaziMarkdown } from '../../logic/utils/markdownGenerator';
 
 // 五行配色 (沿用 slate 底,五行用語意色)
 const WUXING_COLOR: Record<string, string> = {
@@ -42,15 +44,39 @@ const confColor = (c: string) => (c === '高' ? 'text-emerald-400' : c === '中'
 export const BaziBoard = ({ bazi }: { bazi: BaziChartData }) => {
     const { pillars: P } = bazi;
     const e = bazi.enrichment;
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(generateBaziMarkdown(bazi));
+        alert('八字命盤資料已複製 (四柱/大運/旺衰/格局/調候/五行/干支關係)');
+    };
+
     return (
         <div className="w-full max-w-3xl mx-auto p-2 md:p-4 overflow-y-auto h-full custom-scrollbar">
             {/* Header */}
-            <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1.5 mb-4 text-base">
+            <div className="flex items-center justify-between gap-3 mb-2">
                 <span className="text-purple-300 font-bold text-2xl">八字命盤</span>
+                <button
+                    onClick={handleCopy}
+                    className="shrink-0 py-1.5 px-3 rounded text-sm font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:text-white hover:bg-slate-700 transition-all flex items-center gap-1.5"
+                >
+                    📋 複製命盤資料
+                </button>
+            </div>
+            <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1.5 mb-3 text-base">
                 <span className="text-slate-300">日主 <span className={`font-bold text-lg ${ganColor(bazi.dayMaster)}`}>{bazi.dayMaster}（{bazi.dayMasterWuXing}）</span></span>
                 <span className="text-slate-400">生肖 {bazi.zodiac}</span>
                 <span className="text-slate-400">{bazi.gender === 'Male' ? '乾造（男）' : '坤造（女）'}</span>
                 <span className="text-slate-300 text-base">起運 {bazi.startLuck}</span>
+            </div>
+
+            {/* 流派標註 */}
+            <div className="mb-4 rounded-lg border border-indigo-800/50 bg-indigo-950/30 px-3 py-2">
+                <span className="text-sm text-indigo-300 font-bold">分析流派　{BAZI_SCHOOL.name}</span>
+                <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-slate-400">
+                    {BAZI_SCHOOL.items.map(it => (
+                        <span key={it.k}><span className="text-slate-300">{it.k}</span>：{it.v}</span>
+                    ))}
+                </div>
             </div>
 
             {/* 四柱 */}
@@ -140,7 +166,7 @@ export const BaziBoard = ({ bazi }: { bazi: BaziChartData }) => {
             )}
 
             <p className="text-sm text-slate-400 mt-4">
-                四柱按節氣建月、立春換年。旺衰／格局／干支關係由規則計算;喜用神僅列「調候」一法,流派與臨界情形請人工覆核。
+                旺衰／格局／干支關係由規則計算;喜用神僅列「調候」一法,臨界旺衰與從格情形請人工覆核。
             </p>
         </div>
     );

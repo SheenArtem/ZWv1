@@ -1,4 +1,6 @@
 import { ChartData, PalaceData, Star } from '../models/ChartData';
+import { BaziChartData, BaziPillar } from '../models/BaziChartData';
+import { BAZI_SCHOOL } from '../bazi/school';
 
 type DisplayMode = 'birth' | 'decade' | 'year' | 'month';
 
@@ -176,6 +178,89 @@ export const generateFullMarkdown = (chart: ChartData): string => {
         md += `- **大限**: ${palace.daXian}\n`;
         md += `\n`;
     });
+
+    return md;
+};
+
+/**
+ * Generates a COMPLETE markdown document for the 八字 (four-pillars) chart:
+ * pillars + 十神 + 藏干 + 納音 + 大運 plus the rule-based analysis layer
+ * (旺衰/格局/調候/五行/干支關係). The 流派 section is emitted first so an AI
+ * 論命 follows the same methodology the engine used.
+ */
+export const generateBaziMarkdown = (bazi: BaziChartData): string => {
+    const e = bazi.enrichment;
+    const P = bazi.pillars;
+    const wx = ['木', '火', '土', '金', '水'] as const;
+
+    let md = `# 八字命盤完整資料\n\n`;
+    md += `> 本文件包含四柱、十神、藏干、納音、大運與規則分析層（旺衰/格局/調候/五行/干支關係），可直接用於 AI 論命提問。\n\n`;
+
+    // 1. 分析流派 — 讓 AI 依同一套方法論論命
+    md += `## 分析流派\n`;
+    md += `- **系統**: ${BAZI_SCHOOL.name}\n`;
+    BAZI_SCHOOL.items.forEach(it => { md += `- **${it.k}**: ${it.v}\n`; });
+    md += `\n`;
+
+    // 2. 基本資料
+    md += `## 基本資料\n`;
+    md += `- **性別**: ${bazi.gender === 'Male' ? '乾造（男）' : '坤造（女）'}\n`;
+    md += `- **日主**: ${bazi.dayMaster}（${bazi.dayMasterWuXing}）\n`;
+    md += `- **生肖**: ${bazi.zodiac}\n`;
+    md += `- **起運**: ${bazi.startLuck}\n\n`;
+
+    // 3. 四柱
+    md += `## 四柱\n\n`;
+    md += `| 柱 | 天干 | 地支 | 天干十神 | 藏干（十神） | 納音 | 干支五行 | 自坐 |\n`;
+    md += `| --- | --- | --- | --- | --- | --- | --- | --- |\n`;
+    const rows: Array<[string, BaziPillar, string]> = [
+        ['年柱', P.year, e.自坐.年],
+        ['月柱', P.month, e.自坐.月],
+        ['日柱', P.day, e.自坐.日],
+        ['時柱', P.hour, e.自坐.时],
+    ];
+    rows.forEach(([title, p, ziZuo]) => {
+        const hide = p.zhiHideGan.map((g, i) => `${g}${p.zhiShiShen[i] || ''}`).join('、');
+        md += `| ${title} | ${p.gan} | ${p.zhi} | ${p.ganShiShen} | ${hide} | ${p.naYin} | ${p.ganWuXing}${p.zhiWuXing} | ${ziZuo} |\n`;
+    });
+    md += `\n`;
+
+    // 4. 大運
+    md += `## 大運\n`;
+    const yun = bazi.daYun.filter(d => d.ganZhi).map(d => `${d.startAge}歲 ${d.ganZhi}（${d.startYear}）`).join(' ｜ ');
+    md += `- ${yun}\n\n`;
+
+    // 5. 旺衰
+    md += `## 旺衰（日主強弱）\n`;
+    md += `- **結論**: ${e.旺衰.verdict}（分數 ${e.旺衰.score}，信心 ${e.旺衰.confidence}）\n`;
+    md += `- **拆分**: 得令 ${e.旺衰.breakdown.得令} · 長生 ${e.旺衰.breakdown.长生} · 得地 ${e.旺衰.breakdown.得地} · 得勢 ${e.旺衰.breakdown.得势}\n`;
+    if (e.旺衰.breakdown.details.length) md += `- **明細**: ${e.旺衰.breakdown.details.join('；')}\n`;
+    md += `\n`;
+
+    // 6. 格局
+    md += `## 格局\n`;
+    md += `- **主格局**: ${e.格局.primary}（信心 ${e.格局.confidence}）\n`;
+    md += `- **立格依據**: ${e.格局.basis}\n`;
+    if (e.格局.透干.length) md += `- **月令透干**: ${e.格局.透干.join('、')}\n`;
+    e.格局.notes.forEach(n => { md += `- **註**: ${n}\n`; });
+    md += `\n`;
+
+    // 7. 調候用神
+    md += `## 調候用神（窮通寶鑑·僅供參考）\n`;
+    md += `- ${e.调候用神.join('、') || '無'}\n\n`;
+
+    // 8. 五行
+    md += `## 五行統計\n`;
+    md += `- **字面（干支）**: ${wx.map(w => `${w}${e.五行统计.surface[w]}`).join(' ')}\n`;
+    md += `- **含藏干**: ${wx.map(w => `${w}${e.五行统计.withCangGan[w]}`).join(' ')}\n`;
+    md += `- **缺**: ${e.五行统计.missing.join('') || '無'} ／ **最旺**: ${e.五行统计.strongest.join('')}\n`;
+    md += `- **月令旺相休囚死**: ${wx.map(w => `${w}${e.五行旺相[w]}`).join(' ')}\n\n`;
+
+    // 9. 干支關係
+    md += `## 干支關係\n`;
+    md += `- **天干**: ${e.天干关系.length ? e.天干关系.map(r => `${r.gans.join('')}${r.type}（${r.pillars.join('')}）`).join('；') : '無'}\n`;
+    md += `- **地支**: ${e.地支关系.length ? e.地支关系.map(r => `${r.type}${r.zhi.join('')}${r.detail ? `(${r.detail})` : ''}（${r.pillars.join('')}）`).join('；') : '無'}\n`;
+    md += `- **整柱**: ${e.整柱.map(v => `${v.pillar}柱${v.gan}${v.zhi}=${v.verdict}`).join('；')}\n\n`;
 
     return md;
 };
